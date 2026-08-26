@@ -11,6 +11,14 @@ This document turns the [core design](DESIGN.md) into ordered deliverables and c
 - [x] New executable project skeleton created
 - [x] CMake/Visual Studio C++ toolchain installed and first build verified
 
+### State work-unit tracking
+
+The `State NN` prefix is a small, reviewable Git work unit inside the numbered implementation stages below; it is not a replacement for those higher-level stages.
+
+- [x] State 02 — Framework/game boundary, logical viewport, empty scene flow, and timing-map base
+- [x] State 03 — Play-session/result-data handoff and Debug runtime alignment
+- [x] State 04 — 1280×720 Direct2D/DirectWrite scene overlay for visible scene-flow verification
+
 ## Phase 0 — Technology and development foundation
 
 **Purpose:** Establish the toolchain, build, and test foundation needed for executable code.

@@ -12,6 +12,9 @@ SceneVisual MainMenuScene::Visual() const noexcept {
     return {
         .clearColor = {0.025F, 0.095F, 0.205F, 1.0F},
         .windowTitle = L"PumpDX Rebuild — Main Menu (Enter: Song Select)",
+        .headline = L"PUMP DX",
+        .detail = L"Rebuild Foundation",
+        .instruction = L"Press Enter to select a song",
     };
 }
 

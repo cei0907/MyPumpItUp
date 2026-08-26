@@ -142,6 +142,8 @@ Boot/Loading → MainMenu → SongSelect → Gameplay → Result → SongSelect
 
 The logical UI canvas is 1280×720.  The output viewport preserves its 16:9 aspect ratio using scaling and letterboxing where necessary.
 
+The State 04 foundation uses a generic Direct2D/DirectWrite scene overlay over the Direct3D 11 background.  A scene supplies semantic `headline`, `detail`, and `instruction` strings; the framework renderer applies the 1280×720 logical transform and never contains scene rules.  This text-only overlay is a development presentation layer, to be replaced by theme-resolved UI resources and animations in later stages.
+
 The gameplay render order is:
 
 ```text

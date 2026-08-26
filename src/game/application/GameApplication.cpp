@@ -84,7 +84,7 @@ bool GameApplication::CreateMainWindow() {
 bool GameApplication::CreateGraphicsDevice() {
     DXGI_SWAP_CHAIN_DESC swapChainDescription{};
     swapChainDescription.BufferCount = 1;
-    swapChainDescription.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    swapChainDescription.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
     swapChainDescription.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDescription.OutputWindow = window_;
     swapChainDescription.SampleDesc.Count = 1;
@@ -130,6 +130,11 @@ bool GameApplication::CreateGraphicsDevice() {
         return false;
     }
 
+    if (!sceneOverlayRenderer_.Initialize()) {
+        ReleaseGraphicsDevice();
+        return false;
+    }
+
     RECT clientRect{};
     GetClientRect(window_, &clientRect);
     Resize(
@@ -146,11 +151,18 @@ bool GameApplication::CreateRenderTarget() {
     }
 
     const auto createViewResult = device_->CreateRenderTargetView(backBuffer, nullptr, &renderTargetView_);
+    const auto createOverlayResult = SUCCEEDED(createViewResult) && sceneOverlayRenderer_.CreateTarget(backBuffer);
     backBuffer->Release();
-    return SUCCEEDED(createViewResult);
+    if (!createOverlayResult) {
+        ReleaseRenderTarget();
+        return false;
+    }
+
+    return true;
 }
 
 void GameApplication::ReleaseRenderTarget() {
+    sceneOverlayRenderer_.ReleaseTarget();
     if (renderTargetView_ != nullptr) {
         renderTargetView_->Release();
         renderTargetView_ = nullptr;
@@ -159,6 +171,7 @@ void GameApplication::ReleaseRenderTarget() {
 
 void GameApplication::ReleaseGraphicsDevice() {
     ReleaseRenderTarget();
+    sceneOverlayRenderer_.Shutdown();
 
     if (swapChain_ != nullptr) {
         swapChain_->Release();
@@ -215,6 +228,18 @@ void GameApplication::RenderFrame() {
         .MaxDepth = 1.0F,
     };
     context_->RSSetViewports(1, &viewport);
+
+    context_->OMSetRenderTargets(0, nullptr, nullptr);
+    context_->Flush();
+
+    const auto visual = gameFlow_.CurrentSceneVisual();
+    sceneOverlayRenderer_.Draw(
+        logicalViewport_,
+        {
+            .headline = visual.headline,
+            .detail = visual.detail,
+            .instruction = visual.instruction,
+        });
 
     swapChain_->Present(1, 0);
 }

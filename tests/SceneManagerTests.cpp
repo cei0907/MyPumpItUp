@@ -28,6 +28,9 @@ void TestHappyPath() {
     pumpdx::scenes::SceneManager sceneManager;
 
     Expect(sceneManager.CurrentId() == pumpdx::scenes::SceneId::MainMenu, "Main menu must be the initial scene.");
+    const auto mainMenuVisual = sceneManager.CurrentVisual();
+    Expect(!mainMenuVisual.headline.empty(), "Every scene must provide a visible headline.");
+    Expect(!mainMenuVisual.instruction.empty(), "Every scene must provide visible input guidance.");
     ConfirmTransition(sceneManager, pumpdx::scenes::SceneId::SongSelect, "Enter on main menu must open song select.");
     ConfirmTransition(sceneManager, pumpdx::scenes::SceneId::Gameplay, "Enter on song select must start gameplay.");
     ConfirmTransition(sceneManager, pumpdx::scenes::SceneId::Result, "Enter on gameplay must open result.");

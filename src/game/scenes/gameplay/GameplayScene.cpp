@@ -12,6 +12,9 @@ SceneVisual GameplayScene::Visual() const noexcept {
     return {
         .clearColor = {0.015F, 0.04F, 0.075F, 1.0F},
         .windowTitle = L"PumpDX Rebuild — Gameplay (Enter: Result, Esc: Song Select)",
+        .headline = L"GAMEPLAY",
+        .detail = L"Play session is active",
+        .instruction = L"Enter: finish demo     Esc: cancel session",
     };
 }
 

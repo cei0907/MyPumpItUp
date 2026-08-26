@@ -18,6 +18,7 @@ endif()
 
 add_library(pumpdx_core
     src/framework/render/LogicalViewport.cpp
+    src/framework/render/SceneOverlayRenderer.cpp
 )
 
 target_include_directories(pumpdx_core
@@ -101,6 +102,8 @@ target_link_libraries(PumpDXRebuild
         pumpdx_core
         pumpdx_gameflow
         d3d11
+        d2d1
+        dwrite
         dxgi
 )
 

@@ -134,6 +134,8 @@ Boot/Loading → MainMenu → SongSelect → Gameplay → Result → SongSelect
 
 논리 UI 캔버스는 1280×720이다. 실제 출력은 비율을 유지해 확대하며, 필요하면 레터박스를 사용한다.
 
+State 04의 기반은 Direct3D 11 배경 위에 그리는 범용 Direct2D/DirectWrite 씬 오버레이다. 씬은 의미 기반 `headline`, `detail`, `instruction` 문자열만 제공하고, framework 렌더러는 1280×720 논리 변환만 적용하며 씬 규칙을 알지 않는다. 이 텍스트 오버레이는 개발 중 화면 구조를 검증하기 위한 표현층이며, 이후 단계에서 테마가 해석한 UI 리소스와 애니메이션으로 교체한다.
+
 게임 화면의 렌더링 순서는 다음과 같다.
 
 ```text

@@ -11,6 +11,14 @@
 - [x] 새 실행 프로젝트 골격 생성
 - [x] CMake/Visual Studio C++ 도구 설치와 첫 빌드 검증
 
+### State 작업 단위 기록
+
+`State NN` 접두어는 아래의 큰 구현 단계 안에서 검토하기 좋게 나눈 작은 Git 작업 단위이며, 큰 단계 번호를 대체하지 않는다.
+
+- [x] State 02 — Framework/game 경계, 논리 뷰포트, 빈 씬 흐름, TimingMap 기반
+- [x] State 03 — PlaySession/ResultData 전달과 Debug 런타임 정렬
+- [x] State 04 — 씬 흐름을 눈으로 검증하는 1280×720 Direct2D/DirectWrite 오버레이
+
 ## 단계 0 — 기술 스택과 개발 기반
 
 **목적:** 실제 코드를 시작할 수 있는 도구·빌드·테스트 기반을 만든다.

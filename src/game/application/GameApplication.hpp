@@ -1,6 +1,7 @@
 #pragma once
 
 #include "framework/render/LogicalViewport.hpp"
+#include "framework/render/SceneOverlayRenderer.hpp"
 #include "game/application/GameFlow.hpp"
 
 #include <Windows.h>
@@ -45,6 +46,7 @@ private:
     ID3D11RenderTargetView* renderTargetView_ = nullptr;
 
     core::ViewportRect logicalViewport_{};
+    render::SceneOverlayRenderer sceneOverlayRenderer_{};
     GameFlow gameFlow_{};
 };
 
