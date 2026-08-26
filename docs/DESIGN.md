@@ -146,7 +146,7 @@ The logical UI canvas is 1280×720.  The output viewport preserves its 16:9 aspe
 
 The State 04 foundation uses a generic Direct2D/DirectWrite scene overlay over the Direct3D 11 background.  A scene supplies semantic `headline`, `detail`, and `instruction` strings; the framework renderer applies the 1280×720 logical transform and never contains scene rules.  This text-only overlay is a development presentation layer, to be replaced by theme-resolved UI resources and animations in later stages.
 
-State 07 adds the first gameplay-field projection: five lanes, receptors, tap heads, and hold bodies are derived from chart seconds and the current song-clock seconds. `DebugSongClock` is a monotonic development adapter only; it validates time-derived rendering without using frame count or Y position as truth. An FMOD-backed `AudioClock` replaces it before timing judgement is introduced.
+State 07 adds the first gameplay-field projection: five lanes, receptors, tap heads, and hold bodies are derived from chart seconds and the current song-clock seconds. State 08 then validates the rules with the same monotonic `DebugSongClock`: input edges are compared only as `inputTime - noteTime`, automatic misses occur after the final window, and rendering position is never read back for judgement. The default development windows are Perfect ≤30 ms, Great ≤60 ms, Good ≤100 ms, and Bad ≤150 ms. An FMOD-backed `AudioClock` will replace this adapter in State 09 without changing the judgement engine.
 
 The gameplay render order is:
 

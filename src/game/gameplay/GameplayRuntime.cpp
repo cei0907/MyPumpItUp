@@ -20,13 +20,34 @@ constexpr float kVisibleBottom = 685.0F;
 
 } // namespace
 
-GameplayRuntime::GameplayRuntime(const chart::Chart& chart)
-    : songClock_(std::make_unique<DebugSongClock>())
-    , timeline_(CompileTimeline(chart)) {
+GameplayRuntime::GameplayRuntime(const chart::Chart& chart, std::unique_ptr<SongClock> songClock)
+    : songClock_(songClock ? std::move(songClock) : std::make_unique<DebugSongClock>())
+    , timeline_(CompileTimeline(chart))
+    , judgementEngine_([this] {
+        std::vector<JudgableNote> notes;
+        notes.reserve(timeline_.size());
+        for (const auto& note : timeline_) {
+            notes.push_back({.lane = note.lane, .timeSeconds = note.startSeconds});
+        }
+        return notes;
+    }()) {
 }
 
 void GameplayRuntime::SetPanelPressed(const chart::PanelLane lane, const bool pressed) noexcept {
-    pressedPanels_[static_cast<std::size_t>(lane)] = pressed;
+    const auto index = static_cast<std::size_t>(lane);
+    const auto wasPressed = pressedPanels_[index];
+    pressedPanels_[index] = pressed;
+    if (pressed && !wasPressed) {
+        if (const auto event = judgementEngine_.TryJudge(lane, SongTimeSeconds()); event.has_value()) {
+            Apply(*event);
+        }
+    }
+}
+
+void GameplayRuntime::Update() {
+    for (const auto& miss : judgementEngine_.CollectMisses(SongTimeSeconds())) {
+        Apply(miss);
+    }
 }
 
 double GameplayRuntime::SongTimeSeconds() const noexcept {
@@ -37,11 +58,19 @@ const std::array<bool, 5>& GameplayRuntime::PressedPanels() const noexcept {
     return pressedPanels_;
 }
 
+const ScoreState& GameplayRuntime::Score() const noexcept {
+    return scoreState_;
+}
+
 std::vector<render::GameplayRenderItem> GameplayRuntime::BuildRenderItems(const double songTimeSeconds) const {
     std::vector<render::GameplayRenderItem> items;
     items.reserve(timeline_.size());
 
-    for (const auto& note : timeline_) {
+    for (std::size_t index = 0; index < timeline_.size(); ++index) {
+        const auto& note = timeline_[index];
+        if (!note.isHold && judgementEngine_.IsResolved(index)) {
+            continue;
+        }
         const auto headY = ToScreenY(note.startSeconds, songTimeSeconds);
         const auto tailY = note.isHold ? ToScreenY(note.endSeconds, songTimeSeconds) : headY;
         const auto top = std::min(headY, tailY);
@@ -59,6 +88,10 @@ std::vector<render::GameplayRenderItem> GameplayRuntime::BuildRenderItems(const 
     }
 
     return items;
+}
+
+void GameplayRuntime::Apply(const JudgementEvent& event) noexcept {
+    scoreState_.Apply(event);
 }
 
 std::vector<render::GameplayRenderItem> GameplayRuntime::BuildRenderItemsForCurrentTime() const {

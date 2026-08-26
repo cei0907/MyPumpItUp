@@ -3,11 +3,26 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <memory>
 #include <vector>
 
 namespace {
 
 constexpr float kTolerance = 0.001F;
+
+class FixedSongClock final : public pumpdx::gameplay::SongClock {
+public:
+    explicit FixedSongClock(const double seconds)
+        : seconds_(seconds) {
+    }
+
+    [[nodiscard]] double Seconds() const noexcept override {
+        return seconds_;
+    }
+
+private:
+    double seconds_ = 0.0;
+};
 
 void Expect(const bool condition, const char* message) {
     if (condition) {
@@ -60,11 +75,24 @@ void TestPanelStateIsIndependentOfRenderingTime() {
     Expect(!runtime.PressedPanels()[3], "Released panel state was not cleared.");
 }
 
+void TestInputEdgeUsesSongTimeForJudgement() {
+    const auto chart = MakeChart();
+    pumpdx::gameplay::GameplayRuntime runtime(chart, std::make_unique<FixedSongClock>(0.0));
+
+    runtime.SetPanelPressed(pumpdx::chart::PanelLane::DownLeft, true);
+    Expect(runtime.Score().Score() == 1000, "Input at the note's song time must earn a PERFECT score.");
+    Expect(runtime.Score().CurrentCombo() == 1, "A successful input edge must start the combo.");
+
+    runtime.SetPanelPressed(pumpdx::chart::PanelLane::DownLeft, true);
+    Expect(runtime.Score().Score() == 1000, "Repeated key-down while held must not judge twice.");
+}
+
 } // namespace
 
 int main() {
     TestChartTimeProjectsToLogicalField();
     TestPanelStateIsIndependentOfRenderingTime();
+    TestInputEdgeUsesSongTimeForJudgement();
 
     std::cout << "Gameplay runtime tests passed.\n";
     return EXIT_SUCCESS;

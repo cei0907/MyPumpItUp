@@ -95,6 +95,8 @@ target_link_libraries(pumpdx_session PUBLIC pumpdx_chart)
 add_library(pumpdx_gameplay
     src/game/gameplay/DebugSongClock.cpp
     src/game/gameplay/GameplayRuntime.cpp
+    src/game/gameplay/Judgement.cpp
+    src/game/gameplay/ScoreState.cpp
 )
 
 target_include_directories(pumpdx_gameplay
@@ -256,4 +258,19 @@ if(BUILD_TESTING)
     endif()
 
     add_test(NAME PumpDXGameplayRuntimeTests COMMAND PumpDXGameplayRuntimeTests)
+
+    add_executable(PumpDXJudgementTests
+        tests/JudgementTests.cpp
+    )
+
+    target_link_libraries(PumpDXJudgementTests PRIVATE pumpdx_gameplay)
+    target_compile_features(PumpDXJudgementTests PRIVATE cxx_std_20)
+
+    if(MSVC)
+        target_compile_options(PumpDXJudgementTests PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
+    else()
+        target_compile_options(PumpDXJudgementTests PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME PumpDXJudgementTests COMMAND PumpDXJudgementTests)
 endif()

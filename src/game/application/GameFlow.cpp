@@ -30,6 +30,10 @@ void GameFlow::HandleKeyReleased(const std::uint32_t virtualKey) {
 }
 
 bool GameFlow::Update() {
+    if (activeGameplay_) {
+        activeGameplay_->Update();
+    }
+
     const auto previousScene = sceneManager_.CurrentId();
     if (!sceneManager_.Update()) {
         return false;
@@ -57,8 +61,14 @@ scenes::SceneVisual GameFlow::CurrentSceneVisual() const {
         visual.detail = SelectedSong().title + L"  /  " + SelectedSong().difficultyName
             + L"  Lv. " + std::to_wstring(SelectedSong().difficultyLevel);
     } else if (CurrentSceneId() == scenes::SceneId::Gameplay) {
-        visual.detail = SelectedSong().title + L"  /  "
-            + std::to_wstring(SelectedChart().Notes().size()) + L" note events  /  Debug clock";
+        const auto& score = activeGameplay_->Score();
+        visual.headline = score.LatestJudgement().has_value()
+            ? std::wstring(gameplay::JudgementLabel(*score.LatestJudgement()))
+            : L"READY";
+        visual.detail = L"Score " + std::to_wstring(score.Score())
+            + L"  Combo " + std::to_wstring(score.CurrentCombo())
+            + L"  Max " + std::to_wstring(score.MaxCombo())
+            + L"  /  Debug clock";
     }
     return visual;
 }
@@ -94,7 +104,7 @@ void GameFlow::FinishActiveSession() {
         throw std::logic_error("Gameplay cannot finish without an active session.");
     }
 
-    latestResult_ = activeSession_->BuildResult({});
+    latestResult_ = activeSession_->BuildResult(activeGameplay_ ? activeGameplay_->Score().BuildSummary() : session::GameplaySummary{});
     activeGameplay_.reset();
     activeSession_.reset();
     sceneManager_.SetResultData(*latestResult_);
