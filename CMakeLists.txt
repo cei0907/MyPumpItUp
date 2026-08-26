@@ -10,6 +10,12 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Static libraries exchange std::string/std::vector values across target boundaries.
+# Keep every target on the same MSVC runtime so Debug iterator metadata has one layout.
+if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+endif()
+
 add_library(pumpdx_core
     src/framework/render/LogicalViewport.cpp
 )
