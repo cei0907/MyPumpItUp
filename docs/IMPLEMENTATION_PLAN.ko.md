@@ -7,8 +7,9 @@
 - [x] 레거시 구조와 채보/입력 방식 조사
 - [x] 핵심 설계 확정: 시간 모델, 채보, 롱노트, 씬, BGA, 2인 입력, 테마
 - [x] 객체/파일 구조와 테마 패키지 설계
-- [ ] 런타임 기술 스택 확정
-- [ ] 새 실행 프로젝트 생성
+- [x] 런타임 기술 확정: C++20, CMake, Direct3D 11 이후 FMOD, Media Foundation, Raw Input/DirectInput 추가
+- [x] 새 실행 프로젝트 골격 생성
+- [x] CMake/Visual Studio C++ 도구 설치와 첫 빌드 검증
 
 ## 단계 0 — 기술 스택과 개발 기반
 
@@ -16,9 +17,9 @@
 
 **결정할 항목:** 렌더러, 오디오, BGA 영상, USB 입력, 빌드 시스템, 테스트 프레임워크.
 
-현재 추천안은 Windows 전용 **C++20 + Direct3D 11 + FMOD + Media Foundation + Raw Input/DirectInput + CMake**다. 이 선택은 기존 C++/DirectX 경험을 현대적으로 이어가면서 USB 발판과 BGA를 직접 제어하기에 적합하다.
+확정한 스택은 Windows 전용 **C++20 + Direct3D 11 + FMOD + Media Foundation + Raw Input/DirectInput + CMake**다. 이 선택은 기존 C++/DirectX 경험을 현대적으로 이어가면서 USB 발판과 BGA를 직접 제어하기에 적합하다.
 
-**완료 기준:** 빈 창을 열고 닫을 수 있으며, 개발/배포 빌드와 최소 자동 테스트가 모두 실행된다.
+**완료 기준:** 빈 창을 열고 닫을 수 있으며, 개발/배포 빌드와 최소 자동 테스트가 모두 실행된다. **상태: 2026-08-27 완료.**
 
 ## 단계 1 — 런타임 골격과 데이터 경계
 

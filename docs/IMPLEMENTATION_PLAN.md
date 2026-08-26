@@ -7,8 +7,9 @@ This document turns the [core design](DESIGN.md) into ordered deliverables and c
 - [x] Legacy code, chart, and input approach reviewed
 - [x] Core design fixed: timing, charts, holds, scenes, BGA, two-player input, themes
 - [x] Object/file layout and theme-package design defined
-- [ ] Runtime technology stack selected
-- [ ] New executable project created
+- [x] Runtime technology selected: C++20, CMake, Direct3D 11, followed by FMOD, Media Foundation, and Raw Input/DirectInput
+- [x] New executable project skeleton created
+- [x] CMake/Visual Studio C++ toolchain installed and first build verified
 
 ## Phase 0 — Technology and development foundation
 
@@ -16,9 +17,9 @@ This document turns the [core design](DESIGN.md) into ordered deliverables and c
 
 **Decision:** renderer, audio, BGA video, USB input, build system, and test framework.
 
-The current recommendation is Windows-native **C++20 + Direct3D 11 + FMOD + Media Foundation + Raw Input/DirectInput + CMake**. It modernises the original C++/DirectX experience while retaining direct control of USB pads and BGA video.
+The selected stack is Windows-native **C++20 + Direct3D 11 + FMOD + Media Foundation + Raw Input/DirectInput + CMake**. It modernises the original C++/DirectX experience while retaining direct control of USB pads and BGA video.
 
-**Completion gate:** an empty window can open/close, development and release builds work, and a minimal automated test runs.
+**Completion gate:** an empty window can open/close, development and release builds work, and a minimal automated test runs. **Status: completed on 2026-08-27.**
 
 ## Phase 1 — Runtime skeleton and data boundaries
 

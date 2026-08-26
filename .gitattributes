@@ -1,0 +1,14 @@
+# Keep source and documentation consistent across Windows development machines.
+* text=auto eol=lf
+
+# These formats are binary when they are intentionally versioned as assets.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.mp3 binary
+*.ogg binary
+*.wav binary
+*.mp4 binary
+*.webm binary

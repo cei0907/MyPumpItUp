@@ -225,9 +225,11 @@ The first implementation milestone is complete only when all of the following wo
 
 Long notes, BGA video, two-player assignment, and the editor are later milestones built on this slice.
 
-## 12. Deliberately deferred decision
+## 12. Selected runtime technology
 
-Before creating executable code, choose the runtime technology stack.  The architecture above is independent of the choice.  Candidate directions are a modern native Windows C++ renderer (for continuity with the original DirectX work) or a game engine/runtime with mature video and input support.  The choice should be made explicitly before the project skeleton is generated.
+The runtime uses a Windows-native C++20 stack.  The initial project is built with CMake and Direct3D 11; later phases add FMOD for music playback, Media Foundation for BGA video, and Raw Input/DirectInput at the Windows controller boundary.  This preserves the original project's native C++ character without reusing its Direct3D 9-era architecture.
+
+Direct3D 11 and CMake are present from the bootstrap.  FMOD, video playback, and physical pad support are introduced only in their relevant phases so the first build has a small, verifiable dependency surface.
 
 ## 13. Object and file structure
 

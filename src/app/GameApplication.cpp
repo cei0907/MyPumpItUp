@@ -1,0 +1,242 @@
+#include "app/GameApplication.hpp"
+
+#include <array>
+#include <cstdint>
+
+namespace pumpdx::app {
+
+GameApplication::GameApplication(const HINSTANCE instanceHandle)
+    : instanceHandle_(instanceHandle) {
+}
+
+GameApplication::~GameApplication() {
+    ReleaseGraphicsDevice();
+}
+
+int GameApplication::Run() {
+    if (!CreateMainWindow()) {
+        return 1;
+    }
+
+    if (!CreateGraphicsDevice()) {
+        MessageBoxW(window_, L"Direct3D 11 장치를 만들 수 없습니다.", kWindowTitle, MB_ICONERROR | MB_OK);
+        return 1;
+    }
+
+    ShowWindow(window_, SW_SHOWDEFAULT);
+    UpdateWindow(window_);
+
+    MSG message{};
+    while (message.message != WM_QUIT) {
+        if (PeekMessageW(&message, nullptr, 0, 0, PM_REMOVE) != FALSE) {
+            TranslateMessage(&message);
+            DispatchMessageW(&message);
+            continue;
+        }
+
+        RenderFrame();
+    }
+
+    return static_cast<int>(message.wParam);
+}
+
+bool GameApplication::CreateMainWindow() {
+    WNDCLASSEXW windowClass{};
+    windowClass.cbSize = sizeof(windowClass);
+    windowClass.hInstance = instanceHandle_;
+    windowClass.lpfnWndProc = WindowProcedure;
+    windowClass.lpszClassName = kWindowClassName;
+    windowClass.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+
+    if (RegisterClassExW(&windowClass) == 0) {
+        return false;
+    }
+
+    RECT windowRect{
+        .left = 0,
+        .top = 0,
+        .right = static_cast<LONG>(core::LogicalViewport::kDesignWidth),
+        .bottom = static_cast<LONG>(core::LogicalViewport::kDesignHeight),
+    };
+    AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
+
+    window_ = CreateWindowExW(
+        0,
+        kWindowClassName,
+        kWindowTitle,
+        WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT,
+        CW_USEDEFAULT,
+        windowRect.right - windowRect.left,
+        windowRect.bottom - windowRect.top,
+        nullptr,
+        nullptr,
+        instanceHandle_,
+        this);
+
+    return window_ != nullptr;
+}
+
+bool GameApplication::CreateGraphicsDevice() {
+    DXGI_SWAP_CHAIN_DESC swapChainDescription{};
+    swapChainDescription.BufferCount = 1;
+    swapChainDescription.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    swapChainDescription.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    swapChainDescription.OutputWindow = window_;
+    swapChainDescription.SampleDesc.Count = 1;
+    swapChainDescription.Windowed = TRUE;
+    swapChainDescription.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+
+    constexpr std::array featureLevels{
+        D3D_FEATURE_LEVEL_11_1,
+        D3D_FEATURE_LEVEL_11_0,
+    };
+
+    auto result = D3D11CreateDeviceAndSwapChain(
+        nullptr,
+        D3D_DRIVER_TYPE_HARDWARE,
+        nullptr,
+        D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+        featureLevels.data(),
+        static_cast<UINT>(featureLevels.size()),
+        D3D11_SDK_VERSION,
+        &swapChainDescription,
+        &swapChain_,
+        &device_,
+        nullptr,
+        &context_);
+
+    if (FAILED(result)) {
+        result = D3D11CreateDeviceAndSwapChain(
+            nullptr,
+            D3D_DRIVER_TYPE_WARP,
+            nullptr,
+            D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+            featureLevels.data(),
+            static_cast<UINT>(featureLevels.size()),
+            D3D11_SDK_VERSION,
+            &swapChainDescription,
+            &swapChain_,
+            &device_,
+            nullptr,
+            &context_);
+    }
+
+    if (FAILED(result)) {
+        return false;
+    }
+
+    RECT clientRect{};
+    GetClientRect(window_, &clientRect);
+    Resize(
+        static_cast<std::uint32_t>(clientRect.right - clientRect.left),
+        static_cast<std::uint32_t>(clientRect.bottom - clientRect.top));
+    return renderTargetView_ != nullptr;
+}
+
+bool GameApplication::CreateRenderTarget() {
+    ID3D11Texture2D* backBuffer = nullptr;
+    const auto getBufferResult = swapChain_->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
+    if (FAILED(getBufferResult)) {
+        return false;
+    }
+
+    const auto createViewResult = device_->CreateRenderTargetView(backBuffer, nullptr, &renderTargetView_);
+    backBuffer->Release();
+    return SUCCEEDED(createViewResult);
+}
+
+void GameApplication::ReleaseRenderTarget() {
+    if (renderTargetView_ != nullptr) {
+        renderTargetView_->Release();
+        renderTargetView_ = nullptr;
+    }
+}
+
+void GameApplication::ReleaseGraphicsDevice() {
+    ReleaseRenderTarget();
+
+    if (swapChain_ != nullptr) {
+        swapChain_->Release();
+        swapChain_ = nullptr;
+    }
+    if (context_ != nullptr) {
+        context_->Release();
+        context_ = nullptr;
+    }
+    if (device_ != nullptr) {
+        device_->Release();
+        device_ = nullptr;
+    }
+}
+
+void GameApplication::Resize(const std::uint32_t width, const std::uint32_t height) {
+    if (width == 0 || height == 0 || swapChain_ == nullptr) {
+        isMinimized_ = true;
+        return;
+    }
+
+    isMinimized_ = false;
+    logicalViewport_ = core::LogicalViewport::FitInside(width, height);
+
+    ReleaseRenderTarget();
+    if (FAILED(swapChain_->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, 0))) {
+        return;
+    }
+
+    if (!CreateRenderTarget()) {
+        isMinimized_ = true;
+    }
+}
+
+void GameApplication::RenderFrame() {
+    if (isMinimized_ || renderTargetView_ == nullptr) {
+        return;
+    }
+
+    constexpr std::array clearColor{0.015F, 0.025F, 0.055F, 1.0F};
+    context_->OMSetRenderTargets(1, &renderTargetView_, nullptr);
+    context_->ClearRenderTargetView(renderTargetView_, clearColor.data());
+
+    const D3D11_VIEWPORT viewport{
+        .TopLeftX = logicalViewport_.x,
+        .TopLeftY = logicalViewport_.y,
+        .Width = logicalViewport_.width,
+        .Height = logicalViewport_.height,
+        .MinDepth = 0.0F,
+        .MaxDepth = 1.0F,
+    };
+    context_->RSSetViewports(1, &viewport);
+
+    swapChain_->Present(1, 0);
+}
+
+LRESULT CALLBACK GameApplication::WindowProcedure(
+    const HWND window,
+    const UINT message,
+    const WPARAM wParam,
+    const LPARAM lParam) {
+    if (message == WM_NCCREATE) {
+        const auto* createStruct = reinterpret_cast<const CREATESTRUCTW*>(lParam);
+        SetWindowLongPtrW(window, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(createStruct->lpCreateParams));
+    }
+
+    auto* application = reinterpret_cast<GameApplication*>(GetWindowLongPtrW(window, GWLP_USERDATA));
+
+    switch (message) {
+    case WM_SIZE:
+        if (application != nullptr) {
+            application->Resize(
+                static_cast<std::uint32_t>(LOWORD(lParam)),
+                static_cast<std::uint32_t>(HIWORD(lParam)));
+        }
+        return 0;
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        return 0;
+    default:
+        return DefWindowProcW(window, message, wParam, lParam);
+    }
+}
+
+} // namespace pumpdx::app
