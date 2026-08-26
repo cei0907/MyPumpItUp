@@ -232,28 +232,28 @@ PumpDX_Rebuild/
 ├─ docs/                         # 설계와 사용자용 기술 문서
 ├─ assets/                       # 버전 관리하는 개발용 리소스, C++ 소스 아님
 ├─ src/
-│  ├─ app/                       # GameApplication, 시작 처리, 메인 루프
-│  ├─ core/                      # 시간/값 타입, 로그, 설정, 이벤트
-│  ├─ audio/                     # AudioClock, MusicPlayer, 음원 리소스 로딩
-│  ├─ chart/                     # 채보 모델, TimingMap, 컴파일러, 유효성 검사
-│  ├─ input/                     # InputDevice, PadDevice, 키 설정, 장치 배정
-│  ├─ gameplay/                  # JudgementEngine, ScoreState, LifeGauge, 노트 런타임
-│  ├─ scenes/                    # 씬별 폴더와 해당 씬 전용 표현 객체
-│  │  ├─ main_menu/
-│  │  ├─ song_select/
-│  │  ├─ gameplay/
-│  │  ├─ result/
-│  │  └─ device_assignment/
-│  ├─ render/                    # 렌더러, 카메라/뷰포트, 스프라이트, 영상 표면
-│  ├─ ui/                        # 버튼, 레이아웃, SceneTimeline, UI 애니메이션
-│  ├─ assets_runtime/             # ResourceCache, 매니페스트, 테마 로딩
-│  ├─ platform/windows/           # 창, HID/DirectInput/Raw Input 경계
-│  └─ tests/                     # 소스 도메인을 따라 나눈 단위/통합 테스트
+│  ├─ framework/                 # 재사용 가능한 기술 기반, PumpDX 규칙 미포함
+│  │  ├─ application/            # GameApplication, 시작 처리, 메인 루프
+│  │  ├─ render/                 # 렌더러, 뷰포트, 스프라이트, 영상 표면
+│  │  ├─ audio/                  # AudioClock, MusicPlayer, 음원 리소스 로딩
+│  │  ├─ input/                  # 장치, 키 설정, Raw Input/DirectInput 경계
+│  │  ├─ assets/                 # ResourceCache, 매니페스트, 테마 패키지 로딩
+│  │  └─ platform/windows/       # 창과 Windows 전용 어댑터
+│  └─ game/                      # PumpDX 고유 규칙과 화면 표현
+│     ├─ chart/                  # 채보 모델, TimingMap, 컴파일러, 유효성 검사
+│     ├─ gameplay/               # JudgementEngine, ScoreState, LifeGauge, 노트 런타임
+│     ├─ scenes/                 # 씬별 폴더와 해당 씬 전용 표현 객체
+│     │  ├─ main_menu/
+│     │  ├─ song_select/
+│     │  ├─ gameplay/
+│     │  ├─ result/
+│     │  └─ device_assignment/
+│     └─ ui/                     # 레이아웃, SceneTimeline, UI 애니메이션
 ├─ tools/                         # 별도 브라우저 채보/테마 편집기 프로젝트
 └─ tests/                         # 실행 단위 테스트 데이터와 테스트 도구
 ```
 
-상태와 수명을 갖는 공개 C++ 객체는 보통 자신의 헤더/소스 쌍을 가진다. 예를 들어 `JudgementEngine.hpp`와 `JudgementEngine.cpp`처럼 둔다. 작고 분리할 수 없는 값 타입은 `JudgementTypes.hpp`처럼 함께 둘 수 있으며, 구현 전용 보조 함수는 해당 `.cpp`에 숨긴다.
+`src/framework`는 기존 프로젝트에서 유효했던 분리를 계승한 1급 경계다. 재사용 가능한 플랫폼·기술 서비스를 소유하고, `src/game`은 PumpDX 고유 규칙·채보 의미·씬 표현을 소유한다. 게임은 framework 인터페이스를 사용할 수 있지만, framework 코드는 PumpDX 게임 규칙에 의존하지 않는다. 상태와 수명을 갖는 공개 C++ 객체는 보통 자신의 헤더/소스 쌍을 가진다. 예를 들어 `JudgementEngine.hpp`와 `JudgementEngine.cpp`처럼 둔다. 작고 분리할 수 없는 값 타입은 `JudgementTypes.hpp`처럼 함께 둘 수 있으며, 구현 전용 보조 함수는 해당 `.cpp`에 숨긴다.
 
 객체의 책임 경계는 다음처럼 고정한다.
 

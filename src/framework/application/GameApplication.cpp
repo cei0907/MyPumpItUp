@@ -1,4 +1,4 @@
-#include "app/GameApplication.hpp"
+#include "framework/application/GameApplication.hpp"
 
 #include <array>
 #include <cstdint>
@@ -25,6 +25,7 @@ int GameApplication::Run() {
 
     ShowWindow(window_, SW_SHOWDEFAULT);
     UpdateWindow(window_);
+    SetWindowTextW(window_, sceneManager_.CurrentVisual().windowTitle.data());
 
     MSG message{};
     while (message.message != WM_QUIT) {
@@ -34,6 +35,9 @@ int GameApplication::Run() {
             continue;
         }
 
+        if (sceneManager_.Update()) {
+            SetWindowTextW(window_, sceneManager_.CurrentVisual().windowTitle.data());
+        }
         RenderFrame();
     }
 
@@ -189,12 +193,16 @@ void GameApplication::Resize(const std::uint32_t width, const std::uint32_t heig
     }
 }
 
+void GameApplication::HandleKeyReleased(const std::uint32_t virtualKey) {
+    sceneManager_.HandleKeyReleased(virtualKey);
+}
+
 void GameApplication::RenderFrame() {
     if (isMinimized_ || renderTargetView_ == nullptr) {
         return;
     }
 
-    constexpr std::array clearColor{0.015F, 0.025F, 0.055F, 1.0F};
+    const auto clearColor = sceneManager_.CurrentVisual().clearColor;
     context_->OMSetRenderTargets(1, &renderTargetView_, nullptr);
     context_->ClearRenderTargetView(renderTargetView_, clearColor.data());
 
@@ -229,6 +237,11 @@ LRESULT CALLBACK GameApplication::WindowProcedure(
             application->Resize(
                 static_cast<std::uint32_t>(LOWORD(lParam)),
                 static_cast<std::uint32_t>(HIWORD(lParam)));
+        }
+        return 0;
+    case WM_KEYUP:
+        if (application != nullptr) {
+            application->HandleKeyReleased(static_cast<std::uint32_t>(wParam));
         }
         return 0;
     case WM_DESTROY:

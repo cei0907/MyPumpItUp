@@ -1,4 +1,4 @@
-#include "app/GameApplication.hpp"
+#include "framework/application/GameApplication.hpp"
 
 #include <Windows.h>
 

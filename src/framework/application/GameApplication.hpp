@@ -1,6 +1,7 @@
 #pragma once
 
-#include "core/LogicalViewport.hpp"
+#include "framework/render/LogicalViewport.hpp"
+#include "game/scenes/SceneManager.hpp"
 
 #include <Windows.h>
 #include <d3d11.h>
@@ -31,6 +32,7 @@ private:
     void ReleaseRenderTarget();
     void ReleaseGraphicsDevice();
     void Resize(std::uint32_t width, std::uint32_t height);
+    void HandleKeyReleased(std::uint32_t virtualKey);
     void RenderFrame();
 
     HINSTANCE instanceHandle_ = nullptr;
@@ -43,6 +45,7 @@ private:
     ID3D11RenderTargetView* renderTargetView_ = nullptr;
 
     core::ViewportRect logicalViewport_{};
+    scenes::SceneManager sceneManager_{};
 };
 
 } // namespace pumpdx::app

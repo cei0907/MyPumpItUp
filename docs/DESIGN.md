@@ -240,28 +240,28 @@ PumpDX_Rebuild/
 ├─ docs/                         # Design and user-facing technical documents
 ├─ assets/                       # Versioned development assets; not C++ source
 ├─ src/
-│  ├─ app/                       # GameApplication, startup, main loop
-│  ├─ core/                      # Time/value types, logging, configuration, events
-│  ├─ audio/                     # AudioClock, MusicPlayer, audio asset loading
-│  ├─ chart/                     # Chart model, TimingMap, compiler, validation
-│  ├─ input/                     # InputDevice, PadDevice, bindings, assignment
-│  ├─ gameplay/                  # JudgementEngine, ScoreState, LifeGauge, note runtime
-│  ├─ scenes/                    # One folder per scene and its scene-local presentation
-│  │  ├─ main_menu/
-│  │  ├─ song_select/
-│  │  ├─ gameplay/
-│  │  ├─ result/
-│  │  └─ device_assignment/
-│  ├─ render/                    # Renderer, camera/viewport, sprites, video surface
-│  ├─ ui/                        # Buttons, layout, scene timeline, UI animation
-│  ├─ assets_runtime/             # ResourceCache, manifests, theme loading
-│  ├─ platform/windows/           # Window, HID/DirectInput/Raw Input boundary
-│  └─ tests/                     # Unit/integration tests mirroring source domains
+│  ├─ framework/                 # Reusable technical base; no PumpDX rules
+│  │  ├─ application/            # GameApplication, startup, main loop
+│  │  ├─ render/                 # Renderer, viewport, sprites, video surface
+│  │  ├─ audio/                  # AudioClock, MusicPlayer, audio asset loading
+│  │  ├─ input/                  # Devices, bindings, Raw Input/DirectInput boundary
+│  │  ├─ assets/                 # ResourceCache, manifests, theme package loading
+│  │  └─ platform/windows/       # Window and Windows-specific adapters
+│  └─ game/                      # PumpDX-specific rules and presentation
+│     ├─ chart/                  # Chart model, TimingMap, compiler, validation
+│     ├─ gameplay/               # JudgementEngine, ScoreState, LifeGauge, note runtime
+│     ├─ scenes/                 # One folder per scene and scene-local presentation
+│     │  ├─ main_menu/
+│     │  ├─ song_select/
+│     │  ├─ gameplay/
+│     │  ├─ result/
+│     │  └─ device_assignment/
+│     └─ ui/                     # Layout, SceneTimeline, and UI animation
 ├─ tools/                         # Separate browser chart/theme editor projects
 └─ tests/                         # Executable-level test data and test harnesses
 ```
 
-The eventual C++ implementation normally gives a stateful public object its own header/source pair (for example, `JudgementEngine.hpp` and `JudgementEngine.cpp`).  Small, inseparable value types may share a file (`JudgementTypes.hpp`), and implementation-only helpers remain private to their `.cpp` file.
+`src/framework` is intentionally a first-class boundary, matching the useful separation in the original project: it owns reusable platform and technical services, while `src/game` owns PumpDX-specific rules, chart semantics, and scene presentation.  The game may depend on framework interfaces; framework code never depends on PumpDX game rules.  The eventual C++ implementation normally gives a stateful public object its own header/source pair (for example, `JudgementEngine.hpp` and `JudgementEngine.cpp`).  Small, inseparable value types may share a file (`JudgementTypes.hpp`), and implementation-only helpers remain private to their `.cpp` file.
 
 Responsibilities are deliberately bounded:
 
