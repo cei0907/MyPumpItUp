@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/scenes/Scene.hpp"
+#include "game/session/ResultData.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -14,6 +15,7 @@ public:
 
     void HandleKeyReleased(std::uint32_t virtualKey);
     [[nodiscard]] bool Update();
+    void SetResultData(session::ResultData result);
 
     [[nodiscard]] SceneId CurrentId() const noexcept;
     [[nodiscard]] SceneVisual CurrentVisual() const noexcept;

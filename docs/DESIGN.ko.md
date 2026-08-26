@@ -233,14 +233,15 @@ PumpDX_Rebuild/
 ├─ assets/                       # 버전 관리하는 개발용 리소스, C++ 소스 아님
 ├─ src/
 │  ├─ framework/                 # 재사용 가능한 기술 기반, PumpDX 규칙 미포함
-│  │  ├─ application/            # GameApplication, 시작 처리, 메인 루프
 │  │  ├─ render/                 # 렌더러, 뷰포트, 스프라이트, 영상 표면
 │  │  ├─ audio/                  # AudioClock, MusicPlayer, 음원 리소스 로딩
 │  │  ├─ input/                  # 장치, 키 설정, Raw Input/DirectInput 경계
 │  │  ├─ assets/                 # ResourceCache, 매니페스트, 테마 패키지 로딩
 │  │  └─ platform/windows/       # 창과 Windows 전용 어댑터
 │  └─ game/                      # PumpDX 고유 규칙과 화면 표현
+│     ├─ application/            # PumpDX 시작 처리와 게임 흐름 조립
 │     ├─ chart/                  # 채보 모델, TimingMap, 컴파일러, 유효성 검사
+│     ├─ content/                # 곡 메타데이터와 카탈로그
 │     ├─ gameplay/               # JudgementEngine, ScoreState, LifeGauge, 노트 런타임
 │     ├─ scenes/                 # 씬별 폴더와 해당 씬 전용 표현 객체
 │     │  ├─ main_menu/
@@ -248,6 +249,7 @@ PumpDX_Rebuild/
 │     │  ├─ gameplay/
 │     │  ├─ result/
 │     │  └─ device_assignment/
+│     ├─ session/                # PlaySession과 불변 ResultData
 │     └─ ui/                     # 레이아웃, SceneTimeline, UI 애니메이션
 ├─ tools/                         # 별도 브라우저 채보/테마 편집기 프로젝트
 └─ tests/                         # 실행 단위 테스트 데이터와 테스트 도구

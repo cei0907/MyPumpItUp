@@ -1,14 +1,14 @@
 #pragma once
 
 #include "framework/render/LogicalViewport.hpp"
-#include "game/scenes/SceneManager.hpp"
+#include "game/application/GameFlow.hpp"
 
 #include <Windows.h>
 #include <d3d11.h>
 
 #include <cstdint>
 
-namespace pumpdx::app {
+namespace pumpdx::game {
 
 class GameApplication final {
 public:
@@ -45,7 +45,7 @@ private:
     ID3D11RenderTargetView* renderTargetView_ = nullptr;
 
     core::ViewportRect logicalViewport_{};
-    scenes::SceneManager sceneManager_{};
+    GameFlow gameFlow_{};
 };
 
-} // namespace pumpdx::app
+} // namespace pumpdx::game

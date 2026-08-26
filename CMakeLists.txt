@@ -36,6 +36,31 @@ target_include_directories(pumpdx_scenes
 
 target_compile_features(pumpdx_scenes PUBLIC cxx_std_20)
 
+add_library(pumpdx_session
+    src/game/content/SongCatalog.cpp
+    src/game/session/PlaySession.cpp
+)
+
+target_include_directories(pumpdx_session
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_compile_features(pumpdx_session PUBLIC cxx_std_20)
+target_link_libraries(pumpdx_scenes PUBLIC pumpdx_session)
+
+add_library(pumpdx_gameflow
+    src/game/application/GameFlow.cpp
+)
+
+target_include_directories(pumpdx_gameflow
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_compile_features(pumpdx_gameflow PUBLIC cxx_std_20)
+target_link_libraries(pumpdx_gameflow PUBLIC pumpdx_scenes pumpdx_session)
+
 if(MSVC)
     target_compile_options(pumpdx_scenes PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
 else()
@@ -61,14 +86,14 @@ else()
 endif()
 
 add_executable(PumpDXRebuild WIN32
-    src/framework/application/main.cpp
-    src/framework/application/GameApplication.cpp
+    src/game/application/main.cpp
+    src/game/application/GameApplication.cpp
 )
 
 target_link_libraries(PumpDXRebuild
     PRIVATE
         pumpdx_core
-        pumpdx_scenes
+        pumpdx_gameflow
         d3d11
         dxgi
 )
@@ -77,9 +102,13 @@ target_compile_definitions(PumpDXRebuild PRIVATE UNICODE _UNICODE WIN32_LEAN_AND
 
 if(MSVC)
     target_compile_options(pumpdx_core PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
+    target_compile_options(pumpdx_session PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
+    target_compile_options(pumpdx_gameflow PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
     target_compile_options(PumpDXRebuild PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
 else()
     target_compile_options(pumpdx_core PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(pumpdx_session PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(pumpdx_gameflow PRIVATE -Wall -Wextra -Wpedantic)
     target_compile_options(PumpDXRebuild PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
@@ -115,6 +144,21 @@ if(BUILD_TESTING)
     endif()
 
     add_test(NAME PumpDXSceneTests COMMAND PumpDXSceneTests)
+
+    add_executable(PumpDXGameFlowTests
+        tests/GameFlowTests.cpp
+    )
+
+    target_link_libraries(PumpDXGameFlowTests PRIVATE pumpdx_gameflow)
+    target_compile_features(PumpDXGameFlowTests PRIVATE cxx_std_20)
+
+    if(MSVC)
+        target_compile_options(PumpDXGameFlowTests PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
+    else()
+        target_compile_options(PumpDXGameFlowTests PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME PumpDXGameFlowTests COMMAND PumpDXGameFlowTests)
 
     add_executable(PumpDXChartTests
         tests/TimingMapTests.cpp

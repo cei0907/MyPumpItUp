@@ -1,9 +1,9 @@
-#include "framework/application/GameApplication.hpp"
+#include "game/application/GameApplication.hpp"
 
 #include <array>
 #include <cstdint>
 
-namespace pumpdx::app {
+namespace pumpdx::game {
 
 GameApplication::GameApplication(const HINSTANCE instanceHandle)
     : instanceHandle_(instanceHandle) {
@@ -25,7 +25,7 @@ int GameApplication::Run() {
 
     ShowWindow(window_, SW_SHOWDEFAULT);
     UpdateWindow(window_);
-    SetWindowTextW(window_, sceneManager_.CurrentVisual().windowTitle.data());
+    SetWindowTextW(window_, gameFlow_.CurrentSceneVisual().windowTitle.data());
 
     MSG message{};
     while (message.message != WM_QUIT) {
@@ -35,8 +35,8 @@ int GameApplication::Run() {
             continue;
         }
 
-        if (sceneManager_.Update()) {
-            SetWindowTextW(window_, sceneManager_.CurrentVisual().windowTitle.data());
+        if (gameFlow_.Update()) {
+            SetWindowTextW(window_, gameFlow_.CurrentSceneVisual().windowTitle.data());
         }
         RenderFrame();
     }
@@ -194,7 +194,7 @@ void GameApplication::Resize(const std::uint32_t width, const std::uint32_t heig
 }
 
 void GameApplication::HandleKeyReleased(const std::uint32_t virtualKey) {
-    sceneManager_.HandleKeyReleased(virtualKey);
+    gameFlow_.HandleKeyReleased(virtualKey);
 }
 
 void GameApplication::RenderFrame() {
@@ -202,7 +202,7 @@ void GameApplication::RenderFrame() {
         return;
     }
 
-    const auto clearColor = sceneManager_.CurrentVisual().clearColor;
+    const auto clearColor = gameFlow_.CurrentSceneVisual().clearColor;
     context_->OMSetRenderTargets(1, &renderTargetView_, nullptr);
     context_->ClearRenderTargetView(renderTargetView_, clearColor.data());
 
@@ -252,4 +252,4 @@ LRESULT CALLBACK GameApplication::WindowProcedure(
     }
 }
 
-} // namespace pumpdx::app
+} // namespace pumpdx::game

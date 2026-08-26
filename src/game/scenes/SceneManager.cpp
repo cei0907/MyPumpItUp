@@ -6,6 +6,7 @@
 #include "game/scenes/song_select/SongSelectScene.hpp"
 
 #include <stdexcept>
+#include <utility>
 
 namespace pumpdx::scenes {
 
@@ -35,6 +36,14 @@ bool SceneManager::Update() {
 
     currentScene_ = CreateScene(nextScene);
     return true;
+}
+
+void SceneManager::SetResultData(session::ResultData result) {
+    if (CurrentId() != SceneId::Result) {
+        throw std::logic_error("Result data can only be applied to ResultScene.");
+    }
+
+    currentScene_ = std::make_unique<ResultScene>(std::move(result));
 }
 
 SceneId SceneManager::CurrentId() const noexcept {

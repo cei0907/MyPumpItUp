@@ -241,14 +241,15 @@ PumpDX_Rebuild/
 ├─ assets/                       # Versioned development assets; not C++ source
 ├─ src/
 │  ├─ framework/                 # Reusable technical base; no PumpDX rules
-│  │  ├─ application/            # GameApplication, startup, main loop
 │  │  ├─ render/                 # Renderer, viewport, sprites, video surface
 │  │  ├─ audio/                  # AudioClock, MusicPlayer, audio asset loading
 │  │  ├─ input/                  # Devices, bindings, Raw Input/DirectInput boundary
 │  │  ├─ assets/                 # ResourceCache, manifests, theme package loading
 │  │  └─ platform/windows/       # Window and Windows-specific adapters
 │  └─ game/                      # PumpDX-specific rules and presentation
+│     ├─ application/            # PumpDX startup and game-flow composition
 │     ├─ chart/                  # Chart model, TimingMap, compiler, validation
+│     ├─ content/                # Song metadata and catalogues
 │     ├─ gameplay/               # JudgementEngine, ScoreState, LifeGauge, note runtime
 │     ├─ scenes/                 # One folder per scene and scene-local presentation
 │     │  ├─ main_menu/
@@ -256,6 +257,7 @@ PumpDX_Rebuild/
 │     │  ├─ gameplay/
 │     │  ├─ result/
 │     │  └─ device_assignment/
+│     ├─ session/                # PlaySession and immutable ResultData
 │     └─ ui/                     # Layout, SceneTimeline, and UI animation
 ├─ tools/                         # Separate browser chart/theme editor projects
 └─ tests/                         # Executable-level test data and test harnesses

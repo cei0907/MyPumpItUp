@@ -2,16 +2,24 @@
 
 #include "framework/input/KeyCode.hpp"
 
+#include <utility>
+
 namespace pumpdx::scenes {
+
+ResultScene::ResultScene(std::optional<session::ResultData> result)
+    : result_(std::move(result)) {
+}
 
 SceneId ResultScene::Id() const noexcept {
     return SceneId::Result;
 }
 
 SceneVisual ResultScene::Visual() const noexcept {
+    const auto title = result_ ? L"PumpDX Rebuild — Result: " + result_->song.title
+                               : L"PumpDX Rebuild — Result";
     return {
         .clearColor = {0.09F, 0.07F, 0.015F, 1.0F},
-        .windowTitle = L"PumpDX Rebuild — Result (Enter/Esc: Song Select)",
+        .windowTitle = title + L" (Enter/Esc: Song Select)",
     };
 }
 
@@ -21,6 +29,10 @@ std::optional<SceneId> ResultScene::HandleKeyReleased(const std::uint32_t virtua
     }
 
     return std::nullopt;
+}
+
+const session::ResultData* ResultScene::Data() const noexcept {
+    return result_ ? &*result_ : nullptr;
 }
 
 } // namespace pumpdx::scenes
