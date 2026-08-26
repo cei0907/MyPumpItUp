@@ -34,6 +34,7 @@ private:
     void ReleaseRenderTarget();
     void ReleaseGraphicsDevice();
     void Resize(std::uint32_t width, std::uint32_t height);
+    void HandleKeyPressed(std::uint32_t virtualKey);
     void HandleKeyReleased(std::uint32_t virtualKey);
     void RenderFrame();
 

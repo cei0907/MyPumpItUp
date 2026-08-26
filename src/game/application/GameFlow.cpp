@@ -1,5 +1,7 @@
 #include "game/application/GameFlow.hpp"
 
+#include "framework/input/KeyCode.hpp"
+
 #include <stdexcept>
 #include <string>
 
@@ -9,7 +11,21 @@ GameFlow::GameFlow()
     : songCatalog_(content::SongCatalog::CreateDemoCatalog()) {
 }
 
+void GameFlow::HandleKeyPressed(const std::uint32_t virtualKey) {
+    if (!activeGameplay_) {
+        return;
+    }
+    if (const auto panel = input::ToFivePanelInput(virtualKey); panel.has_value()) {
+        activeGameplay_->SetPanelPressed(static_cast<chart::PanelLane>(*panel), true);
+    }
+}
+
 void GameFlow::HandleKeyReleased(const std::uint32_t virtualKey) {
+    if (activeGameplay_) {
+        if (const auto panel = input::ToFivePanelInput(virtualKey); panel.has_value()) {
+            activeGameplay_->SetPanelPressed(static_cast<chart::PanelLane>(*panel), false);
+        }
+    }
     sceneManager_.HandleKeyReleased(virtualKey);
 }
 
@@ -42,7 +58,7 @@ scenes::SceneVisual GameFlow::CurrentSceneVisual() const {
             + L"  Lv. " + std::to_wstring(SelectedSong().difficultyLevel);
     } else if (CurrentSceneId() == scenes::SceneId::Gameplay) {
         visual.detail = SelectedSong().title + L"  /  "
-            + std::to_wstring(SelectedChart().Notes().size()) + L" note events";
+            + std::to_wstring(SelectedChart().Notes().size()) + L" note events  /  Debug clock";
     }
     return visual;
 }
@@ -59,12 +75,17 @@ const session::PlaySession* GameFlow::ActiveSession() const noexcept {
     return activeSession_ ? &*activeSession_ : nullptr;
 }
 
+const gameplay::GameplayRuntime* GameFlow::ActiveGameplay() const noexcept {
+    return activeGameplay_ ? &*activeGameplay_ : nullptr;
+}
+
 const session::ResultData* GameFlow::LatestResult() const noexcept {
     return latestResult_ ? &*latestResult_ : nullptr;
 }
 
 void GameFlow::BeginSelectedSession() {
     activeSession_.emplace(SelectedSong(), songCatalog_.At(selectedSongIndex_).chart);
+    activeGameplay_.emplace(activeSession_->SelectedChart());
     latestResult_.reset();
 }
 
@@ -74,11 +95,13 @@ void GameFlow::FinishActiveSession() {
     }
 
     latestResult_ = activeSession_->BuildResult({});
+    activeGameplay_.reset();
     activeSession_.reset();
     sceneManager_.SetResultData(*latestResult_);
 }
 
 void GameFlow::CancelActiveSession() noexcept {
+    activeGameplay_.reset();
     activeSession_.reset();
 }
 

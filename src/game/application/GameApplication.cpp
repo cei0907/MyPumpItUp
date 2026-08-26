@@ -219,6 +219,10 @@ void GameApplication::HandleKeyReleased(const std::uint32_t virtualKey) {
     gameFlow_.HandleKeyReleased(virtualKey);
 }
 
+void GameApplication::HandleKeyPressed(const std::uint32_t virtualKey) {
+    gameFlow_.HandleKeyPressed(virtualKey);
+}
+
 void GameApplication::RenderFrame() {
     if (isMinimized_ || renderTargetView_ == nullptr) {
         return;
@@ -242,14 +246,19 @@ void GameApplication::RenderFrame() {
     context_->Flush();
 
     const auto visual = gameFlow_.CurrentSceneVisual();
-    sceneOverlayRenderer_.Draw(
-        logicalViewport_,
-        {
-            .headline = visual.headline,
-            .detail = visual.detail,
-            .instruction = visual.instruction,
-        },
-        resourceCache_.ActiveTheme().Palette());
+    const auto overlayText = render::SceneOverlayText{
+        .headline = visual.headline,
+        .detail = visual.detail,
+        .instruction = visual.instruction,
+    };
+    const auto& palette = resourceCache_.ActiveTheme().Palette();
+    if (const auto* gameplay = gameFlow_.ActiveGameplay(); gameplay != nullptr) {
+        const auto items = gameplay->BuildRenderItemsForCurrentTime();
+        sceneOverlayRenderer_.DrawGameplay(
+            logicalViewport_, overlayText, palette, items, gameplay->PressedPanels());
+    } else {
+        sceneOverlayRenderer_.Draw(logicalViewport_, overlayText, palette);
+    }
 
     swapChain_->Present(1, 0);
 }
@@ -272,6 +281,11 @@ LRESULT CALLBACK GameApplication::WindowProcedure(
             application->Resize(
                 static_cast<std::uint32_t>(LOWORD(lParam)),
                 static_cast<std::uint32_t>(HIWORD(lParam)));
+        }
+        return 0;
+    case WM_KEYDOWN:
+        if (application != nullptr) {
+            application->HandleKeyPressed(static_cast<std::uint32_t>(wParam));
         }
         return 0;
     case WM_KEYUP:

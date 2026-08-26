@@ -29,6 +29,7 @@ target_include_directories(pumpdx_core
 )
 
 target_compile_features(pumpdx_core PUBLIC cxx_std_20)
+target_compile_definitions(pumpdx_core PUBLIC NOMINMAX)
 
 add_library(pumpdx_scenes
     src/game/scenes/SceneManager.cpp
@@ -91,10 +92,26 @@ target_include_directories(pumpdx_chart
 target_compile_features(pumpdx_chart PUBLIC cxx_std_20)
 target_link_libraries(pumpdx_session PUBLIC pumpdx_chart)
 
+add_library(pumpdx_gameplay
+    src/game/gameplay/DebugSongClock.cpp
+    src/game/gameplay/GameplayRuntime.cpp
+)
+
+target_include_directories(pumpdx_gameplay
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_compile_features(pumpdx_gameplay PUBLIC cxx_std_20)
+target_link_libraries(pumpdx_gameplay PUBLIC pumpdx_chart pumpdx_core)
+target_link_libraries(pumpdx_gameflow PUBLIC pumpdx_gameplay)
+
 if(MSVC)
     target_compile_options(pumpdx_chart PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
+    target_compile_options(pumpdx_gameplay PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
 else()
     target_compile_options(pumpdx_chart PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(pumpdx_gameplay PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 add_executable(PumpDXRebuild WIN32
@@ -224,4 +241,19 @@ if(BUILD_TESTING)
     endif()
 
     add_test(NAME PumpDXChartModelTests COMMAND PumpDXChartModelTests)
+
+    add_executable(PumpDXGameplayRuntimeTests
+        tests/GameplayRuntimeTests.cpp
+    )
+
+    target_link_libraries(PumpDXGameplayRuntimeTests PRIVATE pumpdx_gameplay)
+    target_compile_features(PumpDXGameplayRuntimeTests PRIVATE cxx_std_20)
+
+    if(MSVC)
+        target_compile_options(PumpDXGameplayRuntimeTests PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
+    else()
+        target_compile_options(PumpDXGameplayRuntimeTests PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME PumpDXGameplayRuntimeTests COMMAND PumpDXGameplayRuntimeTests)
 endif()

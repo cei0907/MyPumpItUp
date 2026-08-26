@@ -20,6 +20,7 @@ The `State NN` prefix is a small, reviewable Git work unit inside the numbered i
 - [x] State 04 — 1280×720 Direct2D/DirectWrite scene overlay for visible scene-flow verification
 - [x] State 05 — Default theme manifest, palette application, and safe semantic resource resolution
 - [x] State 06 — Immutable chart model, five-panel note events, and explicit hold tick counts
+- [x] Stage 02 / State 07 — Debug song clock, chart-time note projection, five-lane field, and keyboard panel state
 
 ## Phase 0 — Technology and development foundation
 
@@ -41,6 +42,8 @@ The selected stack is Windows-native **C++20 + Direct3D 11 + FMOD + Media Founda
 - a base theme manifest and asset-key lookup
 
 **Completion gate:** a dummy song/chart can transition through every scene without scene code hard-coding asset paths or game state.
+
+**Status: completed through State 06.**
 
 ## Phase 2 — First playable vertical slice
 

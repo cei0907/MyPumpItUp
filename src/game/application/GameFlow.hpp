@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/content/SongCatalog.hpp"
+#include "game/gameplay/GameplayRuntime.hpp"
 #include "game/scenes/SceneManager.hpp"
 #include "game/session/PlaySession.hpp"
 
@@ -14,6 +15,7 @@ class GameFlow final {
 public:
     GameFlow();
 
+    void HandleKeyPressed(std::uint32_t virtualKey);
     void HandleKeyReleased(std::uint32_t virtualKey);
     [[nodiscard]] bool Update();
 
@@ -22,6 +24,7 @@ public:
     [[nodiscard]] const content::SongMetadata& SelectedSong() const;
     [[nodiscard]] const chart::Chart& SelectedChart() const;
     [[nodiscard]] const session::PlaySession* ActiveSession() const noexcept;
+    [[nodiscard]] const gameplay::GameplayRuntime* ActiveGameplay() const noexcept;
     [[nodiscard]] const session::ResultData* LatestResult() const noexcept;
 
 private:
@@ -33,6 +36,7 @@ private:
     scenes::SceneManager sceneManager_;
     std::size_t selectedSongIndex_ = 0;
     std::optional<session::PlaySession> activeSession_;
+    std::optional<gameplay::GameplayRuntime> activeGameplay_;
     std::optional<session::ResultData> latestResult_;
 };
 

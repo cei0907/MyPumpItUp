@@ -7,6 +7,9 @@
 #include <d3d11.h>
 #include <dwrite.h>
 
+#include <array>
+#include <cstdint>
+#include <span>
 #include <string_view>
 
 namespace pumpdx::render {
@@ -15,6 +18,13 @@ struct SceneOverlayText final {
     std::wstring_view headline;
     std::wstring_view detail;
     std::wstring_view instruction;
+};
+
+struct GameplayRenderItem final {
+    std::uint8_t lane = 0;
+    float headY = 0.0F;
+    float tailY = 0.0F;
+    bool isHold = false;
 };
 
 class SceneOverlayRenderer final {
@@ -30,6 +40,12 @@ public:
     void ReleaseTarget();
     void Shutdown();
     void Draw(const core::ViewportRect& viewport, const SceneOverlayText& text, const assets::ThemePalette& palette);
+    void DrawGameplay(
+        const core::ViewportRect& viewport,
+        const SceneOverlayText& text,
+        const assets::ThemePalette& palette,
+        std::span<const GameplayRenderItem> items,
+        const std::array<bool, 5>& pressedPanels);
 
 private:
     ID2D1Factory* factory_ = nullptr;

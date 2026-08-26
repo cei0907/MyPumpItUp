@@ -138,6 +138,8 @@ Boot/Loading → MainMenu → SongSelect → Gameplay → Result → SongSelect
 
 State 04의 기반은 Direct3D 11 배경 위에 그리는 범용 Direct2D/DirectWrite 씬 오버레이다. 씬은 의미 기반 `headline`, `detail`, `instruction` 문자열만 제공하고, framework 렌더러는 1280×720 논리 변환만 적용하며 씬 규칙을 알지 않는다. 이 텍스트 오버레이는 개발 중 화면 구조를 검증하기 위한 표현층이며, 이후 단계에서 테마가 해석한 UI 리소스와 애니메이션으로 교체한다.
 
+State 07은 첫 게임 필드 투영을 더한다. 5개 레인, 리셉터, 탭 헤드, 롱노트 몸통은 채보 초 단위 시간과 현재 곡 시계 초 단위 시간으로부터 계산한다. `DebugSongClock`은 프레임 수나 Y 위치를 진실값으로 쓰지 않고 시간 기반 렌더링을 검증하기 위한 단조 개발 어댑터일 뿐이다. 시간 판정을 넣기 전에 FMOD 기반 `AudioClock`으로 교체한다.
+
 게임 화면의 렌더링 순서는 다음과 같다.
 
 ```text

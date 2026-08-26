@@ -1,0 +1,71 @@
+#include "game/gameplay/GameplayRuntime.hpp"
+
+#include <cmath>
+#include <cstdlib>
+#include <iostream>
+#include <vector>
+
+namespace {
+
+constexpr float kTolerance = 0.001F;
+
+void Expect(const bool condition, const char* message) {
+    if (condition) {
+        return;
+    }
+
+    std::cerr << message << '\n';
+    std::exit(EXIT_FAILURE);
+}
+
+[[nodiscard]] pumpdx::chart::Chart MakeChart() {
+    using namespace pumpdx::chart;
+
+    return Chart(
+        "runtime-test",
+        TimingMap({{{0}, 120.0}}),
+        {
+            TapNote{.beat = {0}, .lane = PanelLane::DownLeft},
+            HoldNote{
+                .startBeat = {4},
+                .endBeat = {12},
+                .lane = PanelLane::Center,
+                .tickPolicy = HoldTickPolicy::FixedCount(10),
+            },
+        });
+}
+
+void TestChartTimeProjectsToLogicalField() {
+    const auto chart = MakeChart();
+    const pumpdx::gameplay::GameplayRuntime runtime(chart);
+
+    const auto startItems = runtime.BuildRenderItems(0.0);
+    Expect(startItems.size() == 1, "Only the beat-zero tap should be visible at start time.");
+    Expect(startItems.front().lane == 0, "Tap note projected to the wrong panel lane.");
+    Expect(std::abs(startItems.front().headY - 525.0F) < kTolerance, "Tap note did not project onto the receptor at its chart time.");
+
+    const auto holdItems = runtime.BuildRenderItems(3.0);
+    Expect(holdItems.size() == 1, "The hold note should be visible while its body crosses the field.");
+    Expect(holdItems.front().isHold, "Hold note lost its visual hold flag.");
+    Expect(holdItems.front().tailY > holdItems.front().headY, "Hold body must extend from start beat to end beat.");
+}
+
+void TestPanelStateIsIndependentOfRenderingTime() {
+    const auto chart = MakeChart();
+    pumpdx::gameplay::GameplayRuntime runtime(chart);
+
+    runtime.SetPanelPressed(pumpdx::chart::PanelLane::UpRight, true);
+    Expect(runtime.PressedPanels()[3], "Pressed panel state was not recorded.");
+    runtime.SetPanelPressed(pumpdx::chart::PanelLane::UpRight, false);
+    Expect(!runtime.PressedPanels()[3], "Released panel state was not cleared.");
+}
+
+} // namespace
+
+int main() {
+    TestChartTimeProjectsToLogicalField();
+    TestPanelStateIsIndependentOfRenderingTime();
+
+    std::cout << "Gameplay runtime tests passed.\n";
+    return EXIT_SUCCESS;
+}

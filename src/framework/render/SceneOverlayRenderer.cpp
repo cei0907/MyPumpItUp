@@ -142,4 +142,96 @@ void SceneOverlayRenderer::Draw(
     target_->EndDraw();
 }
 
+void SceneOverlayRenderer::DrawGameplay(
+    const core::ViewportRect& viewport,
+    const SceneOverlayText& text,
+    const assets::ThemePalette& palette,
+    const std::span<const GameplayRenderItem> items,
+    const std::array<bool, 5>& pressedPanels) {
+    if (target_ == nullptr || brush_ == nullptr || viewport.scale <= 0.0F) {
+        return;
+    }
+
+    constexpr float fieldLeft = 190.0F;
+    constexpr float laneWidth = 150.0F;
+    constexpr float laneGap = 12.0F;
+    constexpr float fieldTop = 95.0F;
+    constexpr float fieldBottom = 675.0F;
+    constexpr float receptorY = 525.0F;
+
+    target_->BeginDraw();
+    target_->SetTransform(
+        D2D1::Matrix3x2F::Scale(viewport.scale, viewport.scale)
+        * D2D1::Matrix3x2F::Translation(viewport.x, viewport.y));
+
+    brush_->SetColor(ToD2DColor(palette.heading));
+    target_->DrawText(
+        text.headline.data(), static_cast<UINT32>(text.headline.size()), detailFormat_,
+        D2D1::RectF(44.0F, 20.0F, 420.0F, 62.0F), brush_);
+    brush_->SetColor(ToD2DColor(palette.detail));
+    target_->DrawText(
+        text.detail.data(), static_cast<UINT32>(text.detail.size()), instructionFormat_,
+        D2D1::RectF(360.0F, 24.0F, 1120.0F, 58.0F), brush_);
+
+    brush_->SetColor(ToD2DColor(palette.panel));
+    target_->FillRoundedRectangle(
+        D2D1::RoundedRect(D2D1::RectF(fieldLeft - 18.0F, fieldTop - 14.0F, 1090.0F, fieldBottom + 14.0F), 18.0F, 18.0F),
+        brush_);
+
+    for (std::uint8_t lane = 0; lane < 5; ++lane) {
+        const auto left = fieldLeft + static_cast<float>(lane) * (laneWidth + laneGap);
+        brush_->SetColor(ToD2DColor(palette.detail));
+        target_->DrawRectangle(D2D1::RectF(left, fieldTop, left + laneWidth, fieldBottom), brush_, 1.0F);
+
+        brush_->SetColor(pressedPanels[lane] ? ToD2DColor(palette.accent) : ToD2DColor(palette.panel));
+        target_->FillRoundedRectangle(
+            D2D1::RoundedRect(D2D1::RectF(left + 18.0F, receptorY - 24.0F, left + laneWidth - 18.0F, receptorY + 24.0F), 9.0F, 9.0F),
+            brush_);
+        brush_->SetColor(ToD2DColor(palette.heading));
+        target_->DrawRoundedRectangle(
+            D2D1::RoundedRect(D2D1::RectF(left + 18.0F, receptorY - 24.0F, left + laneWidth - 18.0F, receptorY + 24.0F), 9.0F, 9.0F),
+            brush_, 2.0F);
+    }
+
+    target_->PushAxisAlignedClip(D2D1::RectF(fieldLeft, fieldTop, 1090.0F, fieldBottom), D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+    for (const auto& item : items) {
+        if (item.lane >= 5) {
+            continue;
+        }
+        const auto laneLeft = fieldLeft + static_cast<float>(item.lane) * (laneWidth + laneGap);
+        const auto centerX = laneLeft + laneWidth * 0.5F;
+        if (item.isHold) {
+            brush_->SetColor(ToD2DColor(palette.detail));
+            target_->FillRoundedRectangle(
+                D2D1::RoundedRect(
+                    D2D1::RectF(
+                        centerX - 22.0F,
+                        (std::min)(item.headY, item.tailY),
+                        centerX + 22.0F,
+                        (std::max)(item.headY, item.tailY)),
+                    12.0F,
+                    12.0F),
+                brush_);
+        }
+
+        brush_->SetColor(ToD2DColor(palette.accent));
+        target_->FillRoundedRectangle(
+            D2D1::RoundedRect(D2D1::RectF(centerX - 45.0F, item.headY - 18.0F, centerX + 45.0F, item.headY + 18.0F), 8.0F, 8.0F),
+            brush_);
+        brush_->SetColor(ToD2DColor(palette.heading));
+        target_->DrawRoundedRectangle(
+            D2D1::RoundedRect(D2D1::RectF(centerX - 45.0F, item.headY - 18.0F, centerX + 45.0F, item.headY + 18.0F), 8.0F, 8.0F),
+            brush_, 2.0F);
+    }
+    target_->PopAxisAlignedClip();
+
+    brush_->SetColor(ToD2DColor(palette.instruction));
+    target_->DrawText(
+        text.instruction.data(), static_cast<UINT32>(text.instruction.size()), instructionFormat_,
+        D2D1::RectF(300.0F, 688.0F, 1120.0F, 718.0F), brush_);
+
+    target_->SetTransform(D2D1::Matrix3x2F::Identity());
+    target_->EndDraw();
+}
+
 } // namespace pumpdx::render
