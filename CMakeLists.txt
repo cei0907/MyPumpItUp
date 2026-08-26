@@ -78,6 +78,8 @@ endif()
 
 add_library(pumpdx_chart
     src/game/chart/Beat.cpp
+    src/game/chart/Chart.cpp
+    src/game/chart/ChartValidator.cpp
     src/game/chart/TimingMap.cpp
 )
 
@@ -87,6 +89,7 @@ target_include_directories(pumpdx_chart
 )
 
 target_compile_features(pumpdx_chart PUBLIC cxx_std_20)
+target_link_libraries(pumpdx_session PUBLIC pumpdx_chart)
 
 if(MSVC)
     target_compile_options(pumpdx_chart PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
@@ -206,4 +209,19 @@ if(BUILD_TESTING)
     endif()
 
     add_test(NAME PumpDXChartTests COMMAND PumpDXChartTests)
+
+    add_executable(PumpDXChartModelTests
+        tests/ChartTests.cpp
+    )
+
+    target_link_libraries(PumpDXChartModelTests PRIVATE pumpdx_chart)
+    target_compile_features(PumpDXChartModelTests PRIVATE cxx_std_20)
+
+    if(MSVC)
+        target_compile_options(PumpDXChartModelTests PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
+    else()
+        target_compile_options(PumpDXChartModelTests PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME PumpDXChartModelTests COMMAND PumpDXChartModelTests)
 endif()

@@ -35,6 +35,8 @@ void TestCompletedSessionProducesIndependentResult() {
     const auto* session = gameFlow.ActiveSession();
     Expect(session != nullptr, "Gameplay must own an active play session.");
     Expect(session->SelectedSong().id == selectedSongId, "Play session must receive the selected song value.");
+    Expect(session->SelectedChart().Notes().size() == 4, "Play session must receive the selected chart.");
+    Expect(gameFlow.SelectedChart().Id() == "state-06-demo-foundation", "Game flow must expose the selected chart.");
 
     Confirm(gameFlow, SceneId::Result, "Gameplay completion must enter result.");
     Expect(gameFlow.ActiveSession() == nullptr, "Result scene must not retain the live play session.");

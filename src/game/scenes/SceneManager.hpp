@@ -18,7 +18,7 @@ public:
     void SetResultData(session::ResultData result);
 
     [[nodiscard]] SceneId CurrentId() const noexcept;
-    [[nodiscard]] SceneVisual CurrentVisual() const noexcept;
+    [[nodiscard]] SceneVisual CurrentVisual() const;
 
 private:
     [[nodiscard]] static std::unique_ptr<Scene> CreateScene(SceneId id);

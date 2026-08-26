@@ -72,6 +72,8 @@ Hold { lane, startBeat, endBeat, tickPolicy }
 
 A hold is one authoring event, even though its renderer and scoring system create several internal events.  It is not stored as a long sequence of body cells.
 
+State 06 implements this immutable `Chart` contract with five lanes, `TapNote`, `HoldNote`, ordering, and validation.  The first executable `tickPolicy` mode is an explicit fixed count, so two holds with the same start/end beats can intentionally request 10 and 100 ticks.  Beat-interval policies are added later by the chart compiler without changing the hold event shape.
+
 `tickPolicy` explicitly controls scoring density.  It supports either an exact `intervalBeats` or a requested `tickCount`; the compiler resolves this into exact tick beats.  Therefore two holds with the same visual length can intentionally produce 10 or 100 combo events.
 
 For version 1 of the gameplay rules:

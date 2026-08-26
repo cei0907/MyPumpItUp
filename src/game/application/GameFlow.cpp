@@ -1,6 +1,7 @@
 #include "game/application/GameFlow.hpp"
 
 #include <stdexcept>
+#include <string>
 
 namespace pumpdx::game {
 
@@ -34,12 +35,24 @@ scenes::SceneId GameFlow::CurrentSceneId() const noexcept {
     return sceneManager_.CurrentId();
 }
 
-scenes::SceneVisual GameFlow::CurrentSceneVisual() const noexcept {
-    return sceneManager_.CurrentVisual();
+scenes::SceneVisual GameFlow::CurrentSceneVisual() const {
+    auto visual = sceneManager_.CurrentVisual();
+    if (CurrentSceneId() == scenes::SceneId::SongSelect) {
+        visual.detail = SelectedSong().title + L"  /  " + SelectedSong().difficultyName
+            + L"  Lv. " + std::to_wstring(SelectedSong().difficultyLevel);
+    } else if (CurrentSceneId() == scenes::SceneId::Gameplay) {
+        visual.detail = SelectedSong().title + L"  /  "
+            + std::to_wstring(SelectedChart().Notes().size()) + L" note events";
+    }
+    return visual;
 }
 
 const content::SongMetadata& GameFlow::SelectedSong() const {
-    return songCatalog_.At(selectedSongIndex_);
+    return songCatalog_.At(selectedSongIndex_).metadata;
+}
+
+const chart::Chart& GameFlow::SelectedChart() const {
+    return *songCatalog_.At(selectedSongIndex_).chart;
 }
 
 const session::PlaySession* GameFlow::ActiveSession() const noexcept {
@@ -51,7 +64,7 @@ const session::ResultData* GameFlow::LatestResult() const noexcept {
 }
 
 void GameFlow::BeginSelectedSession() {
-    activeSession_.emplace(SelectedSong());
+    activeSession_.emplace(SelectedSong(), songCatalog_.At(selectedSongIndex_).chart);
     latestResult_.reset();
 }
 

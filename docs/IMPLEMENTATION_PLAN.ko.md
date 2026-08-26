@@ -19,6 +19,7 @@
 - [x] State 03 — PlaySession/ResultData 전달과 Debug 런타임 정렬
 - [x] State 04 — 씬 흐름을 눈으로 검증하는 1280×720 Direct2D/DirectWrite 오버레이
 - [x] State 05 — 기본 테마 매니페스트, 팔레트 적용, 안전한 의미 기반 리소스 해석
+- [x] State 06 — 불변 채보 모델, 5패널 노트 이벤트, 명시적인 롱노트 틱 수
 
 ## 단계 0 — 기술 스택과 개발 기반
 

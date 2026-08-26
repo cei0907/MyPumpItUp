@@ -8,7 +8,7 @@ SceneId MainMenuScene::Id() const noexcept {
     return SceneId::MainMenu;
 }
 
-SceneVisual MainMenuScene::Visual() const noexcept {
+SceneVisual MainMenuScene::Visual() const {
     return {
         .clearColor = {0.025F, 0.095F, 0.205F, 1.0F},
         .windowTitle = L"PumpDX Rebuild — Main Menu (Enter: Song Select)",

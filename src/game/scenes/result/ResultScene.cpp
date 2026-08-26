@@ -14,7 +14,7 @@ SceneId ResultScene::Id() const noexcept {
     return SceneId::Result;
 }
 
-SceneVisual ResultScene::Visual() const noexcept {
+SceneVisual ResultScene::Visual() const {
     const auto title = result_ ? L"PumpDX Rebuild — Result: " + result_->song.title
                                : L"PumpDX Rebuild — Result";
     const auto detail = result_ ? result_->song.title + L"  /  Score " + std::to_wstring(result_->summary.score)

@@ -8,12 +8,12 @@ SceneId SongSelectScene::Id() const noexcept {
     return SceneId::SongSelect;
 }
 
-SceneVisual SongSelectScene::Visual() const noexcept {
+SceneVisual SongSelectScene::Visual() const {
     return {
         .clearColor = {0.11F, 0.035F, 0.19F, 1.0F},
         .windowTitle = L"PumpDX Rebuild — Song Select (Enter: Play, Esc: Menu)",
         .headline = L"SONG SELECT",
-        .detail = L"State 03 Demo  /  Foundation  Lv. 1",
+        .detail = L"Choose a song",
         .instruction = L"Enter: start session     Esc: main menu",
     };
 }

@@ -18,8 +18,9 @@ public:
     [[nodiscard]] bool Update();
 
     [[nodiscard]] scenes::SceneId CurrentSceneId() const noexcept;
-    [[nodiscard]] scenes::SceneVisual CurrentSceneVisual() const noexcept;
+    [[nodiscard]] scenes::SceneVisual CurrentSceneVisual() const;
     [[nodiscard]] const content::SongMetadata& SelectedSong() const;
+    [[nodiscard]] const chart::Chart& SelectedChart() const;
     [[nodiscard]] const session::PlaySession* ActiveSession() const noexcept;
     [[nodiscard]] const session::ResultData* LatestResult() const noexcept;
 

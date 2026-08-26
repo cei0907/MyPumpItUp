@@ -1,25 +1,54 @@
 #include "game/content/SongCatalog.hpp"
 
+#include "game/chart/NoteEvent.hpp"
+
+#include <memory>
 #include <stdexcept>
 #include <utility>
 
 namespace pumpdx::content {
 
-SongCatalog::SongCatalog(std::vector<SongMetadata> songs)
+SongCatalog::SongCatalog(std::vector<SongDefinition> songs)
     : songs_(std::move(songs)) {
     if (songs_.empty()) {
         throw std::invalid_argument("A song catalog requires at least one song.");
+    }
+    for (const auto& song : songs_) {
+        if (song.metadata.id.empty() || song.chart == nullptr) {
+            throw std::invalid_argument("Every song requires metadata and a chart.");
+        }
     }
 }
 
 SongCatalog SongCatalog::CreateDemoCatalog() {
     return SongCatalog({
         {
-            .id = "state-03-demo",
-            .title = L"State 03 Demo",
-            .artist = L"PumpDX Rebuild",
-            .difficultyName = L"Foundation",
-            .difficultyLevel = 1,
+            .metadata = {
+                .id = "state-06-demo",
+                .title = L"State 06 Demo",
+                .artist = L"PumpDX Rebuild",
+                .difficultyName = L"Foundation",
+                .difficultyLevel = 1,
+            },
+            .chart = std::make_shared<const chart::Chart>(
+                "state-06-demo-foundation",
+                chart::TimingMap({{{0}, 120.0}}),
+                std::vector<chart::NoteEvent>{
+                    chart::TapNote{.beat = {0}, .lane = chart::PanelLane::DownLeft},
+                    chart::TapNote{.beat = {1}, .lane = chart::PanelLane::UpLeft},
+                    chart::HoldNote{
+                        .startBeat = {4},
+                        .endBeat = {12},
+                        .lane = chart::PanelLane::Center,
+                        .tickPolicy = chart::HoldTickPolicy::FixedCount(10),
+                    },
+                    chart::HoldNote{
+                        .startBeat = {16},
+                        .endBeat = {24},
+                        .lane = chart::PanelLane::UpRight,
+                        .tickPolicy = chart::HoldTickPolicy::FixedCount(100),
+                    },
+                }),
         },
     });
 }
@@ -28,7 +57,7 @@ std::size_t SongCatalog::Count() const noexcept {
     return songs_.size();
 }
 
-const SongMetadata& SongCatalog::At(const std::size_t index) const {
+const SongDefinition& SongCatalog::At(const std::size_t index) const {
     if (index >= songs_.size()) {
         throw std::out_of_range("Song index is outside the catalog.");
     }

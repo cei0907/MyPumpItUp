@@ -50,7 +50,7 @@ SceneId SceneManager::CurrentId() const noexcept {
     return currentScene_->Id();
 }
 
-SceneVisual SceneManager::CurrentVisual() const noexcept {
+SceneVisual SceneManager::CurrentVisual() const {
     return currentScene_->Visual();
 }
 
