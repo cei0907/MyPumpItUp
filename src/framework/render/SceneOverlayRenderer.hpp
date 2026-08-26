@@ -1,5 +1,6 @@
 #pragma once
 
+#include "framework/assets/ThemeManifest.hpp"
 #include "framework/render/LogicalViewport.hpp"
 
 #include <d2d1.h>
@@ -28,7 +29,7 @@ public:
     [[nodiscard]] bool CreateTarget(ID3D11Texture2D* backBuffer);
     void ReleaseTarget();
     void Shutdown();
-    void Draw(const core::ViewportRect& viewport, const SceneOverlayText& text);
+    void Draw(const core::ViewportRect& viewport, const SceneOverlayText& text, const assets::ThemePalette& palette);
 
 private:
     ID2D1Factory* factory_ = nullptr;

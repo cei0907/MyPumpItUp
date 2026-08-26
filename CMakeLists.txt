@@ -17,6 +17,8 @@ if(MSVC)
 endif()
 
 add_library(pumpdx_core
+    src/framework/assets/ResourceCache.cpp
+    src/framework/assets/ThemeManifest.cpp
     src/framework/render/LogicalViewport.cpp
     src/framework/render/SceneOverlayRenderer.cpp
 )
@@ -107,7 +109,13 @@ target_link_libraries(PumpDXRebuild
         dxgi
 )
 
-target_compile_definitions(PumpDXRebuild PRIVATE UNICODE _UNICODE WIN32_LEAN_AND_MEAN NOMINMAX)
+target_compile_definitions(PumpDXRebuild PRIVATE
+    UNICODE
+    _UNICODE
+    WIN32_LEAN_AND_MEAN
+    NOMINMAX
+    PUMP_DX_DEFAULT_THEME_MANIFEST=L\"${CMAKE_CURRENT_SOURCE_DIR}/assets/themes/default/theme.json\"
+)
 
 if(MSVC)
     target_compile_options(pumpdx_core PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
@@ -138,6 +146,21 @@ if(BUILD_TESTING)
     endif()
 
     add_test(NAME PumpDXCoreTests COMMAND PumpDXCoreTests)
+
+    add_executable(PumpDXThemeTests
+        tests/ThemeManifestTests.cpp
+    )
+
+    target_link_libraries(PumpDXThemeTests PRIVATE pumpdx_core)
+    target_compile_features(PumpDXThemeTests PRIVATE cxx_std_20)
+
+    if(MSVC)
+        target_compile_options(PumpDXThemeTests PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
+    else()
+        target_compile_options(PumpDXThemeTests PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME PumpDXThemeTests COMMAND PumpDXThemeTests)
 
     add_executable(PumpDXSceneTests
         tests/SceneManagerTests.cpp

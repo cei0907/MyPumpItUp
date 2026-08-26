@@ -18,6 +18,7 @@
 - [x] State 02 — Framework/game 경계, 논리 뷰포트, 빈 씬 흐름, TimingMap 기반
 - [x] State 03 — PlaySession/ResultData 전달과 Debug 런타임 정렬
 - [x] State 04 — 씬 흐름을 눈으로 검증하는 1280×720 Direct2D/DirectWrite 오버레이
+- [x] State 05 — 기본 테마 매니페스트, 팔레트 적용, 안전한 의미 기반 리소스 해석
 
 ## 단계 0 — 기술 스택과 개발 기반
 

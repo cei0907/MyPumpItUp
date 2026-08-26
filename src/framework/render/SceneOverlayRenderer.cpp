@@ -7,6 +7,10 @@ namespace pumpdx::render {
 
 namespace {
 
+[[nodiscard]] D2D1_COLOR_F ToD2DColor(const std::array<float, 4>& color) {
+    return {color[0], color[1], color[2], color[3]};
+}
+
 template <typename T>
 void ReleaseCom(T*& object) {
     if (object != nullptr) {
@@ -99,7 +103,10 @@ void SceneOverlayRenderer::Shutdown() {
     ReleaseCom(factory_);
 }
 
-void SceneOverlayRenderer::Draw(const core::ViewportRect& viewport, const SceneOverlayText& text) {
+void SceneOverlayRenderer::Draw(
+    const core::ViewportRect& viewport,
+    const SceneOverlayText& text,
+    const assets::ThemePalette& palette) {
     if (target_ == nullptr || brush_ == nullptr || viewport.scale <= 0.0F) {
         return;
     }
@@ -109,24 +116,24 @@ void SceneOverlayRenderer::Draw(const core::ViewportRect& viewport, const SceneO
         D2D1::Matrix3x2F::Scale(viewport.scale, viewport.scale)
         * D2D1::Matrix3x2F::Translation(viewport.x, viewport.y));
 
-    brush_->SetColor(D2D1::ColorF(0.02F, 0.025F, 0.06F, 0.78F));
+    brush_->SetColor(ToD2DColor(palette.panel));
     target_->FillRoundedRectangle(
         D2D1::RoundedRect(D2D1::RectF(106.0F, 112.0F, 1174.0F, 608.0F), 28.0F, 28.0F), brush_);
 
-    brush_->SetColor(D2D1::ColorF(0.2F, 0.9F, 1.0F, 1.0F));
+    brush_->SetColor(ToD2DColor(palette.accent));
     target_->FillRectangle(D2D1::RectF(156.0F, 197.0F, 166.0F, 438.0F), brush_);
 
-    brush_->SetColor(D2D1::ColorF(D2D1::ColorF::White));
+    brush_->SetColor(ToD2DColor(palette.heading));
     target_->DrawText(
         text.headline.data(), static_cast<UINT32>(text.headline.size()), headlineFormat_,
         D2D1::RectF(204.0F, 170.0F, 1100.0F, 260.0F), brush_);
 
-    brush_->SetColor(D2D1::ColorF(0.80F, 0.88F, 0.96F, 1.0F));
+    brush_->SetColor(ToD2DColor(palette.detail));
     target_->DrawText(
         text.detail.data(), static_cast<UINT32>(text.detail.size()), detailFormat_,
         D2D1::RectF(204.0F, 294.0F, 1080.0F, 360.0F), brush_);
 
-    brush_->SetColor(D2D1::ColorF(0.56F, 0.67F, 0.82F, 1.0F));
+    brush_->SetColor(ToD2DColor(palette.instruction));
     target_->DrawText(
         text.instruction.data(), static_cast<UINT32>(text.instruction.size()), instructionFormat_,
         D2D1::RectF(204.0F, 468.0F, 1080.0F, 526.0F), brush_);

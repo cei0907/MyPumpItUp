@@ -2,6 +2,8 @@
 
 #include <array>
 #include <cstdint>
+#include <filesystem>
+#include <stdexcept>
 
 namespace pumpdx::game {
 
@@ -130,6 +132,13 @@ bool GameApplication::CreateGraphicsDevice() {
         return false;
     }
 
+    try {
+        resourceCache_.LoadTheme(std::filesystem::path(PUMP_DX_DEFAULT_THEME_MANIFEST));
+    } catch (const std::exception&) {
+        ReleaseGraphicsDevice();
+        return false;
+    }
+
     if (!sceneOverlayRenderer_.Initialize()) {
         ReleaseGraphicsDevice();
         return false;
@@ -239,7 +248,8 @@ void GameApplication::RenderFrame() {
             .headline = visual.headline,
             .detail = visual.detail,
             .instruction = visual.instruction,
-        });
+        },
+        resourceCache_.ActiveTheme().Palette());
 
     swapChain_->Present(1, 0);
 }

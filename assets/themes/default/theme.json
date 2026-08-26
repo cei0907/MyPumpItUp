@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "1",
+  "id": "default",
+  "palette.panel": "#050610C7",
+  "palette.accent": "#33E6FFFF",
+  "palette.heading": "#FFFFFFFF",
+  "palette.detail": "#C9E0F5FF",
+  "palette.instruction": "#8FAAD1FF",
+  "resources.overlay.accent": "ui/overlay-accent.txt"
+}

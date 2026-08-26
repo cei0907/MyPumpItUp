@@ -18,6 +18,7 @@ The `State NN` prefix is a small, reviewable Git work unit inside the numbered i
 - [x] State 02 — Framework/game boundary, logical viewport, empty scene flow, and timing-map base
 - [x] State 03 — Play-session/result-data handoff and Debug runtime alignment
 - [x] State 04 — 1280×720 Direct2D/DirectWrite scene overlay for visible scene-flow verification
+- [x] State 05 — Default theme manifest, palette application, and safe semantic resource resolution
 
 ## Phase 0 — Technology and development foundation
 

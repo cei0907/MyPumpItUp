@@ -298,6 +298,8 @@ themes/<theme-id>/
 
 `theme.json` maps stable semantic keys (for example `gameplay.note.sw`, `ui.song_select.cursor`, or `result.grade.a`) to files and their presentation metadata.  Metadata includes the logical design size, anchor/pivot, sprite-sheet grid or frame rectangles, animation timing/looping, nine-slice data where relevant, and an optional colour/opacity default.  Code refers to semantic keys only; scenes never reference theme file paths directly.
 
+State 05 provides the first executable subset of this contract: schema version, theme id, five overlay-palette colours, and `resources.<semantic-key>` mappings are loaded from the active `theme.json`.  `ResourceCache` resolves only relative resource paths and rejects paths that leave the selected theme package.  Sprite metadata, image decoding, and hot reload remain later additions to the same schema rather than a separate theme system.
+
 The renderer preserves gameplay geometry independently of bitmap dimensions.  Replacing a note image cannot move its judgement location: the note/receptor anchors are part of the layout contract, while a theme supplies its visual pivot/offset.  The theme validator checks required keys, readable files, frame bounds, supported video/image formats, and 1280×720 logical-size compatibility.  Missing optional assets fall back to the active default theme; missing required assets prevent activation and report a clear error.
 
 `ThemeManifest` and `ResourceCache` load the selected theme at scene/session boundaries.  Development builds may hot-reload a changed manifest or asset safely; released builds use a prepared package.  BGA remains song-owned by default, while a theme may provide a static fallback or visual overlay.

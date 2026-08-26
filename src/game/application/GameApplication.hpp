@@ -1,5 +1,6 @@
 #pragma once
 
+#include "framework/assets/ResourceCache.hpp"
 #include "framework/render/LogicalViewport.hpp"
 #include "framework/render/SceneOverlayRenderer.hpp"
 #include "game/application/GameFlow.hpp"
@@ -46,6 +47,7 @@ private:
     ID3D11RenderTargetView* renderTargetView_ = nullptr;
 
     core::ViewportRect logicalViewport_{};
+    assets::ResourceCache resourceCache_{};
     render::SceneOverlayRenderer sceneOverlayRenderer_{};
     GameFlow gameFlow_{};
 };
