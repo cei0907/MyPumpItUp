@@ -177,6 +177,8 @@ State 12 makes long-note authoring executable rather than only structural: `.pdx
 
 State 13 connects those holds to live gameplay. A successful head starts its per-lane hold state; a press during an already-passing body catches the hold from its next available sustain point. Evenly distributed sustain points, including one at the end, emit `HoldTick` or `HoldEnd` judgement events. The score, combo, gauge, and result summary receive those events just like taps, while `ScoreState` also records the total number of sustain points. Releasing a hold misses only the points that pass while the panel is up; pressing again resumes from the next point and never revives earlier points. This PIU-style re-hold rule is clear and testable without tying timing to rendering.
 
+State 14 adds a versioned native hold overlay for the local `NewSongToGod` audio. The current manifest still loads `NewSongToGod_10.stp` unchanged, then merges only the overlay's original hold events into its runtime chart. F5 therefore preserves the legacy tap stream while adding short/long holds, 8/12/16/20-point sustain densities, and two simultaneous holds on different panels. The Direct2D placeholder field now distinguishes a caught hold body from an inactive one using the active palette colour. Final note skins, burst effects, and animation are still theme work rather than chart rules.
+
 The gameplay render order is:
 
 ```text

@@ -47,7 +47,13 @@ void TestCompletedHoldAwardsHeadAndEverySustainPoint() {
     pumpdx::gameplay::GameplayRuntime runtime(MakeHoldChart(), std::move(clock));
 
     clockView->SetSeconds(1.0);
+    const auto inactiveItems = runtime.BuildRenderItemsForCurrentTime();
+    Expect(inactiveItems.size() == 1 && !inactiveItems.front().isHoldActive,
+        "An unpressed hold body must remain visually inactive.");
     runtime.SetPanelPressed(pumpdx::chart::PanelLane::Center, true);
+    const auto activeItems = runtime.BuildRenderItemsForCurrentTime();
+    Expect(activeItems.size() == 1 && activeItems.front().isHoldActive,
+        "A held body must expose its active visual state.");
     for (const auto seconds : {2.0, 3.0, 4.0, 5.0}) {
         clockView->SetSeconds(seconds);
         runtime.Update();

@@ -27,6 +27,7 @@ struct GameplayRenderItem final {
     float headY = 0.0F;
     float tailY = 0.0F;
     bool isHold = false;
+    bool isHoldActive = false;
 };
 
 class SceneOverlayRenderer final {

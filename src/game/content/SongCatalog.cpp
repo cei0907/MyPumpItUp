@@ -39,16 +39,33 @@ SongCatalog SongCatalog::CreateDemoCatalog(const std::filesystem::path& manifest
                 if (!hasChart) {
                     return CreateFallbackChart();
                 }
+                std::shared_ptr<const chart::Chart> baseChart;
                 if (extension == ".stp") {
-                    return std::make_shared<const chart::Chart>(chart::LegacyStpImporter::LoadTapChart(
+                    baseChart = std::make_shared<const chart::Chart>(chart::LegacyStpImporter::LoadTapChart(
                         manifest.chartFilePath,
                         manifest.metadata.id + "-legacy-stp",
                         manifest.legacyStartPosition));
+                } else if (extension == ".pdxchart") {
+                    baseChart = std::make_shared<const chart::Chart>(chart::NativeChartLoader::Load(manifest.chartFilePath));
+                } else {
+                    throw std::runtime_error("Unsupported chart extension: " + manifest.chartFilePath.extension().string());
                 }
-                if (extension == ".pdxchart") {
-                    return std::make_shared<const chart::Chart>(chart::NativeChartLoader::Load(manifest.chartFilePath));
+
+                if (manifest.holdOverlayFilePath.empty()) {
+                    return baseChart;
                 }
-                throw std::runtime_error("Unsupported chart extension: " + manifest.chartFilePath.extension().string());
+                if (!std::filesystem::is_regular_file(manifest.holdOverlayFilePath)) {
+                    throw std::runtime_error("Hold overlay chart was not found: " + manifest.holdOverlayFilePath.string());
+                }
+
+                const auto overlayChart = chart::NativeChartLoader::Load(manifest.holdOverlayFilePath);
+                auto mergedNotes = baseChart->Notes();
+                const auto& overlayNotes = overlayChart.Notes();
+                mergedNotes.insert(mergedNotes.end(), overlayNotes.begin(), overlayNotes.end());
+                return std::make_shared<const chart::Chart>(
+                    baseChart->Id() + "-hold-overlay",
+                    baseChart->Timing(),
+                    std::move(mergedNotes));
             }(),
             .audioFilePath = manifest.audioFilePath,
             .staticBgaFilePath = manifest.staticBgaFilePath,

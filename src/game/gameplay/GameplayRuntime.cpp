@@ -97,6 +97,7 @@ std::vector<render::GameplayRenderItem> GameplayRuntime::BuildRenderItems(const 
             .headY = headY,
             .tailY = tailY,
             .isHold = note.isHold,
+            .isHoldActive = note.isHold && note.holdActivated && note.nextHoldTick < note.holdTickSeconds.size(),
         });
     }
 

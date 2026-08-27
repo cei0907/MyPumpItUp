@@ -1,0 +1,15 @@
+# Hold overlay for the local NewSongToGod legacy tap chart.
+# The runtime preserves every imported .stp tap and adds only these original holds.
+schemaVersion=1
+id=new-song-to-god-hold-playtest
+
+[tempo]
+0=142
+
+[notes]
+# Short, long, dense, and simultaneous holds for live playtesting.
+hold=SW,12,20,8
+hold=C,30,38,12
+hold=SE,52,64,20
+hold=NW,76,84,8
+hold=NE,76,84,16

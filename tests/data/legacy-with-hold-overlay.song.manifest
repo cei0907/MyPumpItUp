@@ -1,0 +1,11 @@
+schemaVersion=1
+id=legacy-overlay-test
+title=Legacy Overlay Test
+artist=Test
+difficultyName=Hold Overlay
+difficultyLevel=1
+audioPath=missing-local-audio.mp3
+chartPath=legacy-taps.stp
+holdOverlayPath=native-holds.pdxchart
+audioOffsetMilliseconds=0
+legacyStartPosition=83

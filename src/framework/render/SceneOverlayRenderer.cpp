@@ -298,7 +298,7 @@ void SceneOverlayRenderer::DrawGameplay(
         const auto laneLeft = fieldLeft + static_cast<float>(item.lane) * (laneWidth + laneGap);
         const auto centerX = laneLeft + laneWidth * 0.5F;
         if (item.isHold) {
-            brush_->SetColor(ToD2DColor(palette.detail));
+            brush_->SetColor(item.isHoldActive ? ToD2DColor(palette.accent) : ToD2DColor(palette.detail));
             target_->FillRoundedRectangle(
                 D2D1::RoundedRect(
                     D2D1::RectF(
@@ -311,7 +311,7 @@ void SceneOverlayRenderer::DrawGameplay(
                 brush_);
         }
 
-        brush_->SetColor(ToD2DColor(palette.accent));
+        brush_->SetColor(item.isHold && item.isHoldActive ? ToD2DColor(palette.heading) : ToD2DColor(palette.accent));
         target_->FillRoundedRectangle(
             D2D1::RoundedRect(D2D1::RectF(centerX - 45.0F, item.headY - 18.0F, centerX + 45.0F, item.headY + 18.0F), 8.0F, 8.0F),
             brush_);

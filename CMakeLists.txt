@@ -352,6 +352,24 @@ if(BUILD_TESTING)
 
     add_test(NAME PumpDXSongManifestTests COMMAND PumpDXSongManifestTests)
 
+    add_executable(PumpDXSongCatalogTests
+        tests/SongCatalogTests.cpp
+    )
+
+    target_link_libraries(PumpDXSongCatalogTests PRIVATE pumpdx_session)
+    target_compile_features(PumpDXSongCatalogTests PRIVATE cxx_std_20)
+    target_compile_definitions(PumpDXSongCatalogTests PRIVATE
+        PUMP_DX_TEST_OVERLAY_MANIFEST="${CMAKE_CURRENT_SOURCE_DIR}/tests/data/legacy-with-hold-overlay.song.manifest"
+    )
+
+    if(MSVC)
+        target_compile_options(PumpDXSongCatalogTests PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
+    else()
+        target_compile_options(PumpDXSongCatalogTests PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME PumpDXSongCatalogTests COMMAND PumpDXSongCatalogTests)
+
     add_executable(PumpDXLegacyStpTests
         tests/LegacyStpImporterTests.cpp
     )

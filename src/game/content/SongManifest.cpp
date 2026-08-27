@@ -114,6 +114,12 @@ SongManifest SongManifest::Load(const std::filesystem::path& manifestPath) {
         },
         .audioFilePath = (manifestPath.parent_path() / Required(values, "audioPath")).lexically_normal(),
         .chartFilePath = (manifestPath.parent_path() / Required(values, "chartPath")).lexically_normal(),
+        .holdOverlayFilePath = [&manifestPath, &values] {
+            const auto overlayPath = Optional(values, "holdOverlayPath");
+            return overlayPath.empty()
+                ? std::filesystem::path{}
+                : (manifestPath.parent_path() / overlayPath).lexically_normal();
+        }(),
         .staticBgaFilePath = [&manifestPath, &values] {
             const auto bgaPath = Optional(values, "staticBgaPath");
             return bgaPath.empty()
