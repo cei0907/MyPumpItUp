@@ -181,6 +181,8 @@ State 14 adds a versioned native hold overlay for the local `NewSongToGod` audio
 
 State 15 tightens the lane contract after validating the real legacy tap stream: a tap cannot share its lane with a hold at any point from that hold's head through its end. The `NewSongToGod` overlay is placed only inside measured empty spans of its matching legacy lane, while different lanes may overlap freely. This turns a visual/gameplay convention into a deterministic chart-validation error rather than leaving it to manual authoring discipline.
 
+State 16 replaces the development field placement with the fixed 1280×720 single-player gameplay layout. `GameplayLayout` is the shared source of truth for both chart projection and Direct2D rendering: the centred five-lane field spans X=290–990, the receptor line is Y=498, and the field is clipped from Y=156–672. A horizontal energy bar sits directly above the field, song information and score occupy the top band, and judgement/combo feedback is centred above the receptors. The HUD exposes score, combo, max combo, and hold-tick count without putting gameplay state in the renderer. Receptors brighten while pressed; inactive holds are muted, caught holds use the active colour, and a hold that has missed a sustain point receives an amber/red warning outline. These are semantic placeholder visuals; final arrows, skins, particles, and animated transitions remain theme-driven work.
+
 The gameplay render order is:
 
 ```text

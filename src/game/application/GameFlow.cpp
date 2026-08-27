@@ -69,15 +69,9 @@ scenes::SceneVisual GameFlow::CurrentSceneVisual() const {
         visual.detail = SelectedSong().title + L"  /  " + SelectedSong().difficultyName
             + L"  Lv. " + std::to_wstring(SelectedSong().difficultyLevel);
     } else if (CurrentSceneId() == scenes::SceneId::Gameplay) {
-        const auto& score = activeGameplay_->Score();
-        visual.headline = score.LatestJudgement().has_value()
-            ? std::wstring(gameplay::JudgementLabel(*score.LatestJudgement()))
-            : L"READY";
-        visual.detail = L"Score " + std::to_wstring(score.Score())
-            + L"  Combo " + std::to_wstring(score.CurrentCombo())
-            + L"  Max " + std::to_wstring(score.MaxCombo())
-            + L"  Energy " + std::to_wstring(static_cast<int>(activeGameplay_->Energy().Value()))
-            + (IsUsingAudioClock() ? L"  /  FMOD AudioClock" : L"  /  Debug clock (audio unavailable)");
+        visual.headline = SelectedSong().title;
+        visual.detail = SelectedSong().difficultyName
+            + (IsUsingAudioClock() ? L"  /  FMOD" : L"  /  Debug clock");
     }
     return visual;
 }

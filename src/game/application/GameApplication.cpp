@@ -255,8 +255,19 @@ void GameApplication::RenderFrame() {
     if (const auto* gameplay = gameFlow_.ActiveGameplay(); gameplay != nullptr) {
         static_cast<void>(sceneOverlayRenderer_.LoadGameplayBackground(gameFlow_.ActiveStaticBgaPath()));
         const auto items = gameplay->BuildRenderItemsForCurrentTime();
+        const auto& score = gameplay->Score();
+        const auto judgement = score.LatestJudgement().has_value()
+            ? gameplay::JudgementLabel(*score.LatestJudgement())
+            : std::wstring_view(L"READY");
         sceneOverlayRenderer_.DrawGameplay(
             logicalViewport_, overlayText, palette, items, gameplay->PressedPanels(),
+            {
+                .judgement = judgement,
+                .score = score.Score(),
+                .combo = score.CurrentCombo(),
+                .maxCombo = score.MaxCombo(),
+                .holdTicks = score.HoldTicks(),
+            },
             static_cast<float>(gameplay->Energy().Value()));
     } else {
         sceneOverlayRenderer_.Draw(logicalViewport_, overlayText, palette);

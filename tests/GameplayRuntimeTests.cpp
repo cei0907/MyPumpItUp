@@ -1,4 +1,5 @@
 #include "game/gameplay/GameplayRuntime.hpp"
+#include "framework/render/GameplayLayout.hpp"
 
 #include <cmath>
 #include <cstdlib>
@@ -57,7 +58,8 @@ void TestChartTimeProjectsToLogicalField() {
     const auto startItems = runtime.BuildRenderItems(0.0);
     Expect(startItems.size() == 1, "Only the beat-zero tap should be visible at start time.");
     Expect(startItems.front().lane == 0, "Tap note projected to the wrong panel lane.");
-    Expect(std::abs(startItems.front().headY - 525.0F) < kTolerance, "Tap note did not project onto the receptor at its chart time.");
+    Expect(std::abs(startItems.front().headY - pumpdx::render::layout::kReceptorY) < kTolerance,
+        "Tap note did not project onto the receptor at its chart time.");
 
     const auto holdItems = runtime.BuildRenderItems(3.0);
     Expect(holdItems.size() == 1, "The hold note should be visible while its body crosses the field.");

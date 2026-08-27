@@ -1,6 +1,7 @@
 #include "game/gameplay/GameplayRuntime.hpp"
 
 #include "game/gameplay/DebugSongClock.hpp"
+#include "framework/render/GameplayLayout.hpp"
 
 #include <algorithm>
 #include <utility>
@@ -9,13 +10,12 @@ namespace pumpdx::gameplay {
 
 namespace {
 
-constexpr float kReceptorY = 525.0F;
 constexpr float kScrollPixelsPerSecond = 230.0F;
 constexpr float kVisibleTop = 88.0F;
 constexpr float kVisibleBottom = 685.0F;
 
 [[nodiscard]] float ToScreenY(const double eventSeconds, const double songTimeSeconds) {
-    return kReceptorY + static_cast<float>((eventSeconds - songTimeSeconds) * kScrollPixelsPerSecond);
+    return render::layout::kReceptorY + static_cast<float>((eventSeconds - songTimeSeconds) * kScrollPixelsPerSecond);
 }
 
 } // namespace
@@ -98,6 +98,7 @@ std::vector<render::GameplayRenderItem> GameplayRuntime::BuildRenderItems(const 
             .tailY = tailY,
             .isHold = note.isHold,
             .isHoldActive = note.isHold && note.holdActivated && note.nextHoldTick < note.holdTickSeconds.size(),
+            .isHoldDamaged = note.isHold && note.holdHasMissedTick,
         });
     }
 
@@ -131,6 +132,9 @@ void GameplayRuntime::ProcessHoldTicks(const double songTimeSeconds) {
                 .timingErrorSeconds = 0.0,
                 .source = isEnd ? JudgementSource::HoldEnd : JudgementSource::HoldTick,
             });
+            if (!isHeld) {
+                hold.holdHasMissedTick = true;
+            }
             ++hold.nextHoldTick;
         }
     }

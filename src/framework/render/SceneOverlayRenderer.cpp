@@ -1,11 +1,14 @@
 #include "framework/render/SceneOverlayRenderer.hpp"
 
+#include "framework/render/GameplayLayout.hpp"
+
 #include <d2d1helper.h>
 #include <dxgi.h>
 #include <objbase.h>
 #include <wincodec.h>
 
 #include <algorithm>
+#include <string>
 
 namespace pumpdx::render {
 
@@ -216,17 +219,11 @@ void SceneOverlayRenderer::DrawGameplay(
     const assets::ThemePalette& palette,
     const std::span<const GameplayRenderItem> items,
     const std::array<bool, 5>& pressedPanels,
+    const GameplayHud& hud,
     const float energyPercent) {
     if (target_ == nullptr || brush_ == nullptr || viewport.scale <= 0.0F) {
         return;
     }
-
-    constexpr float fieldLeft = 190.0F;
-    constexpr float laneWidth = 150.0F;
-    constexpr float laneGap = 12.0F;
-    constexpr float fieldTop = 95.0F;
-    constexpr float fieldBottom = 675.0F;
-    constexpr float receptorY = 525.0F;
 
     target_->BeginDraw();
     target_->SetTransform(
@@ -240,65 +237,111 @@ void SceneOverlayRenderer::DrawGameplay(
         target_->FillRectangle(D2D1::RectF(0.0F, 0.0F, 1280.0F, 720.0F), brush_);
     }
 
+    brush_->SetColor(D2D1::ColorF(0.01F, 0.02F, 0.04F, 0.70F));
+    target_->FillRectangle(D2D1::RectF(0.0F, 0.0F, 1280.0F, 88.0F), brush_);
+
     brush_->SetColor(ToD2DColor(palette.heading));
     target_->DrawText(
         text.headline.data(), static_cast<UINT32>(text.headline.size()), detailFormat_,
-        D2D1::RectF(44.0F, 20.0F, 420.0F, 62.0F), brush_);
+        D2D1::RectF(44.0F, 18.0F, 600.0F, 56.0F), brush_);
     brush_->SetColor(ToD2DColor(palette.detail));
     target_->DrawText(
         text.detail.data(), static_cast<UINT32>(text.detail.size()), instructionFormat_,
-        D2D1::RectF(360.0F, 24.0F, 1120.0F, 58.0F), brush_);
+        D2D1::RectF(44.0F, 54.0F, 600.0F, 82.0F), brush_);
 
     brush_->SetColor(ToD2DColor(palette.panel));
     target_->FillRoundedRectangle(
-        D2D1::RoundedRect(D2D1::RectF(fieldLeft - 18.0F, fieldTop - 14.0F, 1090.0F, fieldBottom + 14.0F), 18.0F, 18.0F),
+        D2D1::RoundedRect(
+            D2D1::RectF(
+                layout::kFieldLeft - 22.0F,
+                layout::kFieldTop - 16.0F,
+                layout::kFieldRight + 22.0F,
+                layout::kFieldBottom + 14.0F),
+            18.0F,
+            18.0F),
         brush_);
 
-    constexpr float gaugeLeft = 1130.0F;
-    constexpr float gaugeTop = 104.0F;
-    constexpr float gaugeBottom = 520.0F;
     const auto clampedEnergy = (std::clamp)(energyPercent, 0.0F, 100.0F);
-    const auto gaugeFillTop = gaugeBottom - (gaugeBottom - gaugeTop) * clampedEnergy / 100.0F;
+    const auto gaugeFillRight = layout::kGaugeLeft
+        + (layout::kGaugeRight - layout::kGaugeLeft) * clampedEnergy / 100.0F;
     brush_->SetColor(D2D1::ColorF(0.01F, 0.02F, 0.04F, 0.84F));
     target_->FillRoundedRectangle(
-        D2D1::RoundedRect(D2D1::RectF(gaugeLeft, gaugeTop, 1192.0F, gaugeBottom), 12.0F, 12.0F), brush_);
+        D2D1::RoundedRect(
+            D2D1::RectF(layout::kGaugeLeft, layout::kGaugeTop, layout::kGaugeRight, layout::kGaugeBottom),
+            10.0F,
+            10.0F),
+        brush_);
     if (clampedEnergy > 0.0F) {
         brush_->SetColor(clampedEnergy > 25.0F ? ToD2DColor(palette.accent) : D2D1::ColorF(0.92F, 0.18F, 0.16F, 1.0F));
         target_->FillRoundedRectangle(
             D2D1::RoundedRect(
-                D2D1::RectF(gaugeLeft + 8.0F, (std::min)(gaugeFillTop, gaugeBottom - 8.0F), 1184.0F, gaugeBottom - 8.0F),
+                D2D1::RectF(
+                    layout::kGaugeLeft + 5.0F,
+                    layout::kGaugeTop + 5.0F,
+                    (std::max)(layout::kGaugeLeft + 5.0F, gaugeFillRight - 5.0F),
+                    layout::kGaugeBottom - 5.0F),
                 7.0F,
                 7.0F),
             brush_);
     }
     brush_->SetColor(ToD2DColor(palette.heading));
     target_->DrawRoundedRectangle(
-        D2D1::RoundedRect(D2D1::RectF(gaugeLeft, gaugeTop, 1192.0F, gaugeBottom), 12.0F, 12.0F), brush_, 2.0F);
+        D2D1::RoundedRect(
+            D2D1::RectF(layout::kGaugeLeft, layout::kGaugeTop, layout::kGaugeRight, layout::kGaugeBottom),
+            10.0F,
+            10.0F),
+        brush_,
+        2.0F);
+    brush_->SetColor(ToD2DColor(palette.instruction));
+    target_->DrawText(L"ENERGY", 6, instructionFormat_, D2D1::RectF(218.0F, 108.0F, 324.0F, 136.0F), brush_);
+
+    const auto scoreText = L"SCORE  " + std::to_wstring(hud.score);
+    const auto maxComboText = L"MAX " + std::to_wstring(hud.maxCombo) + L"   HOLD " + std::to_wstring(hud.holdTicks);
+    brush_->SetColor(ToD2DColor(palette.heading));
+    target_->DrawText(scoreText.data(), static_cast<UINT32>(scoreText.size()), detailFormat_,
+        D2D1::RectF(928.0F, 18.0F, 1230.0F, 52.0F), brush_);
+    brush_->SetColor(ToD2DColor(palette.instruction));
+    target_->DrawText(maxComboText.data(), static_cast<UINT32>(maxComboText.size()), instructionFormat_,
+        D2D1::RectF(928.0F, 54.0F, 1230.0F, 82.0F), brush_);
 
     for (std::uint8_t lane = 0; lane < 5; ++lane) {
-        const auto left = fieldLeft + static_cast<float>(lane) * (laneWidth + laneGap);
+        const auto left = layout::kFieldLeft + static_cast<float>(lane) * (layout::kLaneWidth + layout::kLaneGap);
         brush_->SetColor(ToD2DColor(palette.detail));
-        target_->DrawRectangle(D2D1::RectF(left, fieldTop, left + laneWidth, fieldBottom), brush_, 1.0F);
+        target_->DrawRectangle(D2D1::RectF(left, layout::kFieldTop, left + layout::kLaneWidth, layout::kFieldBottom), brush_, 1.0F);
 
+        if (pressedPanels[lane]) {
+            brush_->SetColor(D2D1::ColorF(0.12F, 0.85F, 1.0F, 0.18F));
+            target_->FillRectangle(D2D1::RectF(left, layout::kReceptorY - 48.0F, left + layout::kLaneWidth, layout::kReceptorY + 48.0F), brush_);
+        }
         brush_->SetColor(pressedPanels[lane] ? ToD2DColor(palette.accent) : ToD2DColor(palette.panel));
         target_->FillRoundedRectangle(
-            D2D1::RoundedRect(D2D1::RectF(left + 18.0F, receptorY - 24.0F, left + laneWidth - 18.0F, receptorY + 24.0F), 9.0F, 9.0F),
+            D2D1::RoundedRect(
+                D2D1::RectF(left + 14.0F, layout::kReceptorY - 25.0F, left + layout::kLaneWidth - 14.0F, layout::kReceptorY + 25.0F),
+                9.0F,
+                9.0F),
             brush_);
         brush_->SetColor(ToD2DColor(palette.heading));
         target_->DrawRoundedRectangle(
-            D2D1::RoundedRect(D2D1::RectF(left + 18.0F, receptorY - 24.0F, left + laneWidth - 18.0F, receptorY + 24.0F), 9.0F, 9.0F),
+            D2D1::RoundedRect(
+                D2D1::RectF(left + 14.0F, layout::kReceptorY - 25.0F, left + layout::kLaneWidth - 14.0F, layout::kReceptorY + 25.0F),
+                9.0F,
+                9.0F),
             brush_, 2.0F);
     }
 
-    target_->PushAxisAlignedClip(D2D1::RectF(fieldLeft, fieldTop, 1090.0F, fieldBottom), D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+    target_->PushAxisAlignedClip(
+        D2D1::RectF(layout::kFieldLeft, layout::kFieldTop, layout::kFieldRight, layout::kFieldBottom),
+        D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
     for (const auto& item : items) {
         if (item.lane >= 5) {
             continue;
         }
-        const auto laneLeft = fieldLeft + static_cast<float>(item.lane) * (laneWidth + laneGap);
-        const auto centerX = laneLeft + laneWidth * 0.5F;
+        const auto laneLeft = layout::kFieldLeft + static_cast<float>(item.lane) * (layout::kLaneWidth + layout::kLaneGap);
+        const auto centerX = laneLeft + layout::kLaneWidth * 0.5F;
         if (item.isHold) {
-            brush_->SetColor(item.isHoldActive ? ToD2DColor(palette.accent) : ToD2DColor(palette.detail));
+            brush_->SetColor(item.isHoldActive
+                ? ToD2DColor(palette.accent)
+                : (item.isHoldDamaged ? D2D1::ColorF(0.92F, 0.18F, 0.16F, 1.0F) : ToD2DColor(palette.detail)));
             target_->FillRoundedRectangle(
                 D2D1::RoundedRect(
                     D2D1::RectF(
@@ -309,6 +352,20 @@ void SceneOverlayRenderer::DrawGameplay(
                     12.0F,
                     12.0F),
                 brush_);
+            if (item.isHoldDamaged) {
+                brush_->SetColor(D2D1::ColorF(1.0F, 0.66F, 0.25F, 1.0F));
+                target_->DrawRoundedRectangle(
+                    D2D1::RoundedRect(
+                        D2D1::RectF(
+                            centerX - 22.0F,
+                            (std::min)(item.headY, item.tailY),
+                            centerX + 22.0F,
+                            (std::max)(item.headY, item.tailY)),
+                        12.0F,
+                        12.0F),
+                    brush_,
+                    2.0F);
+            }
         }
 
         brush_->SetColor(item.isHold && item.isHoldActive ? ToD2DColor(palette.heading) : ToD2DColor(palette.accent));
@@ -322,10 +379,22 @@ void SceneOverlayRenderer::DrawGameplay(
     }
     target_->PopAxisAlignedClip();
 
+    headlineFormat_->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+    brush_->SetColor(ToD2DColor(palette.heading));
+    target_->DrawText(hud.judgement.data(), static_cast<UINT32>(hud.judgement.size()), headlineFormat_,
+        D2D1::RectF(390.0F, 178.0F, 890.0F, 246.0F), brush_);
+    brush_->SetColor(ToD2DColor(palette.instruction));
+    target_->DrawText(L"COMBO", 5, instructionFormat_, D2D1::RectF(548.0F, 250.0F, 732.0F, 276.0F), brush_);
+    const auto comboText = std::to_wstring(hud.combo);
+    brush_->SetColor(ToD2DColor(palette.accent));
+    target_->DrawText(comboText.data(), static_cast<UINT32>(comboText.size()), headlineFormat_,
+        D2D1::RectF(460.0F, 272.0F, 820.0F, 342.0F), brush_);
+    headlineFormat_->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+
     brush_->SetColor(ToD2DColor(palette.instruction));
     target_->DrawText(
         text.instruction.data(), static_cast<UINT32>(text.instruction.size()), instructionFormat_,
-        D2D1::RectF(300.0F, 688.0F, 1120.0F, 718.0F), brush_);
+        D2D1::RectF(326.0F, 686.0F, 954.0F, 716.0F), brush_);
 
     target_->SetTransform(D2D1::Matrix3x2F::Identity());
     target_->EndDraw();

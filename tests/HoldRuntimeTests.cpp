@@ -78,6 +78,9 @@ void TestReleaseMissesOnlyTheGapAndRepressResumes() {
     runtime.SetPanelPressed(pumpdx::chart::PanelLane::Center, false);
     clockView->SetSeconds(3.0);
     runtime.Update();
+    const auto damagedItems = runtime.BuildRenderItemsForCurrentTime();
+    Expect(damagedItems.size() == 1 && damagedItems.front().isHoldDamaged,
+        "A missed sustain point must expose the damaged hold visual state.");
     clockView->SetSeconds(3.2);
     runtime.SetPanelPressed(pumpdx::chart::PanelLane::Center, true);
     clockView->SetSeconds(5.0);

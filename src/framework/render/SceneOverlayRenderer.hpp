@@ -28,6 +28,15 @@ struct GameplayRenderItem final {
     float tailY = 0.0F;
     bool isHold = false;
     bool isHoldActive = false;
+    bool isHoldDamaged = false;
+};
+
+struct GameplayHud final {
+    std::wstring_view judgement;
+    std::uint32_t score = 0;
+    std::uint32_t combo = 0;
+    std::uint32_t maxCombo = 0;
+    std::uint32_t holdTicks = 0;
 };
 
 class SceneOverlayRenderer final {
@@ -50,6 +59,7 @@ public:
         const assets::ThemePalette& palette,
         std::span<const GameplayRenderItem> items,
         const std::array<bool, 5>& pressedPanels,
+        const GameplayHud& hud,
         float energyPercent);
 
 private:

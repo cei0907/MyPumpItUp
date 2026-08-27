@@ -38,6 +38,7 @@ private:
         std::vector<double> holdTickSeconds;
         std::size_t nextHoldTick = 0;
         bool holdActivated = false;
+        bool holdHasMissedTick = false;
     };
 
     [[nodiscard]] static std::vector<TimelineNote> CompileTimeline(const chart::Chart& chart);
