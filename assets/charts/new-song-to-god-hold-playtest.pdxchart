@@ -7,9 +7,10 @@ id=new-song-to-god-hold-playtest
 0=142
 
 [notes]
-# Short, long, dense, and simultaneous holds for live playtesting.
-hold=SW,12,20,8
-hold=C,30,38,12
-hold=SE,52,64,20
-hold=NW,76,84,8
-hold=NE,76,84,16
+# Each range was selected from an empty span in the matching legacy lane.
+hold=SW,13,17,8
+hold=C,30,33,6
+hold=SE,50,55,10
+hold=NE,69,75,12
+hold=SW,93,96,8
+hold=NE,93,96,12

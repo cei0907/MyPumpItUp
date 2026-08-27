@@ -87,7 +87,7 @@ For version 1 of the gameplay rules:
 
 The fixed `tickCount` is the number of sustain points after the head; the last one is the end point. Therefore a completed `hold=...,10` yields one head judgement plus ten sustain combo events. This keeps hold duration, combo density, and endpoint handling explicit. Re-hold behaviour is a gameplay ruleset decision and never changes rendering behaviour.
 
-The validator rejects impossible lane overlap and malformed holds (`endBeat <= startBeat`).
+The validator rejects malformed holds (`endBeat <= startBeat`), overlapping holds on one lane, and every tap whose beat falls on or between the start and end of a hold on that same lane. Different lanes remain independent, so simultaneous holds or taps on other panels are valid.
 
 ### 4.3 Compiled chart
 
@@ -178,6 +178,8 @@ State 12 makes long-note authoring executable rather than only structural: `.pdx
 State 13 connects those holds to live gameplay. A successful head starts its per-lane hold state; a press during an already-passing body catches the hold from its next available sustain point. Evenly distributed sustain points, including one at the end, emit `HoldTick` or `HoldEnd` judgement events. The score, combo, gauge, and result summary receive those events just like taps, while `ScoreState` also records the total number of sustain points. Releasing a hold misses only the points that pass while the panel is up; pressing again resumes from the next point and never revives earlier points. This PIU-style re-hold rule is clear and testable without tying timing to rendering.
 
 State 14 adds a versioned native hold overlay for the local `NewSongToGod` audio. The current manifest still loads `NewSongToGod_10.stp` unchanged, then merges only the overlay's original hold events into its runtime chart. F5 therefore preserves the legacy tap stream while adding short/long holds, 8/12/16/20-point sustain densities, and two simultaneous holds on different panels. The Direct2D placeholder field now distinguishes a caught hold body from an inactive one using the active palette colour. Final note skins, burst effects, and animation are still theme work rather than chart rules.
+
+State 15 tightens the lane contract after validating the real legacy tap stream: a tap cannot share its lane with a hold at any point from that hold's head through its end. The `NewSongToGod` overlay is placed only inside measured empty spans of its matching legacy lane, while different lanes may overlap freely. This turns a visual/gameplay convention into a deterministic chart-validation error rather than leaving it to manual authoring discipline.
 
 The gameplay render order is:
 

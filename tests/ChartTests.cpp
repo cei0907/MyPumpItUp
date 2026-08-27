@@ -109,6 +109,15 @@ void TestInvalidNotesAreRejected() {
             .tickPolicy = HoldTickPolicy::FixedCount(10),
         },
     }, "Overlapping holds on the same lane must be rejected.");
+    ExpectInvalidChart({
+        HoldNote{
+            .startBeat = {4},
+            .endBeat = {12},
+            .lane = PanelLane::Center,
+            .tickPolicy = HoldTickPolicy::FixedCount(10),
+        },
+        TapNote{.beat = {8}, .lane = PanelLane::Center},
+    }, "Tap notes inside a hold on the same lane must be rejected.");
 }
 
 } // namespace

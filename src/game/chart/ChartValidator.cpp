@@ -51,6 +51,20 @@ void ChartValidator::Validate(
             }
         }
     }
+
+    for (const auto& event : notes) {
+        const auto* tap = std::get_if<TapNote>(&event);
+        if (tap == nullptr) {
+            continue;
+        }
+
+        const auto& laneHolds = holdsByLane[static_cast<std::size_t>(tap->lane)];
+        for (const auto* hold : laneHolds) {
+            if (hold->startBeat <= tap->beat && tap->beat <= hold->endBeat) {
+                throw std::invalid_argument("Tap notes cannot overlap a hold on the same panel lane.");
+            }
+        }
+    }
 }
 
 } // namespace pumpdx::chart
