@@ -25,6 +25,7 @@
 - [x] Stage 02 / State 09 — FMOD AudioClock, 로컬 전용 음원 경로, 외부 곡 매니페스트
 - [x] Stage 02 / State 10 — 레거시 `.stp` 탭 채보 가져오기, 에너지 상태, 자동 곡 종료, 결과 요약
 - [x] Stage 02 / State 11 — 정적 BGA 이미지/대체 배경, 보이는 에너지 게이지, 수직 슬라이스 완료 점검
+- [x] Stage 03 / State 12 — 읽기 쉬운 `.pdxchart` 원본 로더, 정확한 N연음, BPM 변경, 롱노트 틱 메타데이터
 
 ## 단계 0 — 기술 스택과 개발 기반
 

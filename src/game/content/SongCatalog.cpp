@@ -2,8 +2,11 @@
 
 #include "game/chart/NoteEvent.hpp"
 #include "game/chart/LegacyStpImporter.hpp"
+#include "game/chart/NativeChartLoader.hpp"
 #include "game/content/SongManifest.hpp"
 
+#include <algorithm>
+#include <cctype>
 #include <memory>
 #include <stdexcept>
 #include <utility>
@@ -24,16 +27,29 @@ SongCatalog::SongCatalog(std::vector<SongDefinition> songs)
 
 SongCatalog SongCatalog::CreateDemoCatalog(const std::filesystem::path& manifestPath) {
     const auto manifest = SongManifest::Load(manifestPath);
-    const auto hasLegacyChart = std::filesystem::is_regular_file(manifest.chartFilePath);
+    const auto hasChart = std::filesystem::is_regular_file(manifest.chartFilePath);
+    auto extension = manifest.chartFilePath.extension().string();
+    std::transform(extension.begin(), extension.end(), extension.begin(), [](const unsigned char character) {
+        return static_cast<char>(std::tolower(character));
+    });
     return SongCatalog({
         {
             .metadata = manifest.metadata,
-            .chart = hasLegacyChart
-                ? std::make_shared<const chart::Chart>(chart::LegacyStpImporter::LoadTapChart(
-                    manifest.chartFilePath,
-                    manifest.metadata.id + "-legacy-stp",
-                    manifest.legacyStartPosition))
-                : CreateFallbackChart(),
+            .chart = [&manifest, hasChart, &extension] {
+                if (!hasChart) {
+                    return CreateFallbackChart();
+                }
+                if (extension == ".stp") {
+                    return std::make_shared<const chart::Chart>(chart::LegacyStpImporter::LoadTapChart(
+                        manifest.chartFilePath,
+                        manifest.metadata.id + "-legacy-stp",
+                        manifest.legacyStartPosition));
+                }
+                if (extension == ".pdxchart") {
+                    return std::make_shared<const chart::Chart>(chart::NativeChartLoader::Load(manifest.chartFilePath));
+                }
+                throw std::runtime_error("Unsupported chart extension: " + manifest.chartFilePath.extension().string());
+            }(),
             .audioFilePath = manifest.audioFilePath,
             .staticBgaFilePath = manifest.staticBgaFilePath,
             .audioOffsetSeconds = manifest.audioOffsetSeconds,

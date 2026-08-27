@@ -93,6 +93,23 @@ The browser editor saves a readable source chart.  A compiler validates it and c
 
 The former `.stp` files can be imported as fixed 16th-grid tap charts.  This is a migration path only; the new format does not inherit that limitation.
 
+### 4.4 Native source chart (`.pdxchart`)
+
+State 12 introduces the first readable source-chart contract. It is intentionally line-oriented so both a person and the future browser editor can create it without a binary tool:
+
+```text
+schemaVersion=1
+id=example-single
+[tempo]
+0=142
+[notes]
+tap=SW,1/3
+hold=C,4,12,10
+hold=SE,17+1/3,25+1/3,100
+```
+
+`SW`, `NW`, `C`, `NE`, and `SE` name the five panels. Beats are exact integers, fractions, or mixed fractions. A hold stores one start, end, and exact requested tick count; its visual length and combo density remain independent. The native loader rejects malformed data, invalid lanes, impossible holds, and unordered tempo segments through the same immutable `Chart` validator used by gameplay. `.stp` remains a supported tap-only import path, while catalog loading selects the parser by file extension.
+
 ## 5. Judgement, score, and gauge
 
 ### 5.1 Judgement algorithm
@@ -153,6 +170,8 @@ State 09 supplies that replacement through `FmodAudioPlayer` and `FmodSongClock`
 State 10 imports the legacy five-lane `.stp` tap format without editing its source file. Each `1` in the first lane's fixed sixteenth-note grid becomes a `TapNote`; the importer deliberately preserves the old loader's two compatibility details: header counts may equal the first-lane length plus one, and trailing symbols beyond the first lane's length are ignored. The old `startPoint` is not an audio-device offset. It was a Y coordinate: with the old 45-pixel grid, 3×BPM note velocity, and receptor at Y=83, it becomes a chart lead-in of `(startPoint - 83) / 180` beats. Score judgements update a basic 0–100 energy state, and FMOD playback completion moves the session into Result with its score, max combo, and clear/fail state.
 
 State 11 adds a static BGA path to the song manifest. `SceneOverlayRenderer` loads it through WIC only while gameplay is active; a missing or unreadable file preserves the dark generated fallback instead of failing the session. The same field now contains a simple vertical 0–100 energy gauge. These are intentionally basic presentation adapters: video BGA, dynamic scene animation, and skinned gauge effects remain separate Phase 3 systems.
+
+State 12 makes long-note authoring executable rather than only structural: `.pdxchart` loads exact tuplet beats, tempo changes, tap events, and holds with independent fixed tick counts. It deliberately does not activate hold scoring yet; State 13 consumes the resolved hold head/tick/end timeline during live play.
 
 The gameplay render order is:
 

@@ -1,0 +1,13 @@
+# Readable native chart source. Fractions allow triplets and arbitrary tuplets.
+schemaVersion=1
+id=native-hold-test
+
+[tempo]
+0=120
+16=150
+
+[notes]
+tap=SW,0
+tap=NW,1/3
+hold=C,4,12,10
+hold=SE,17+1/3,25+1/3,100

@@ -112,6 +112,7 @@ add_library(pumpdx_chart
     src/game/chart/Chart.cpp
     src/game/chart/ChartValidator.cpp
     src/game/chart/LegacyStpImporter.cpp
+    src/game/chart/NativeChartLoader.cpp
     src/game/chart/TimingMap.cpp
 )
 
@@ -353,4 +354,22 @@ if(BUILD_TESTING)
     endif()
 
     add_test(NAME PumpDXLegacyStpTests COMMAND PumpDXLegacyStpTests)
+
+    add_executable(PumpDXNativeChartTests
+        tests/NativeChartLoaderTests.cpp
+    )
+
+    target_link_libraries(PumpDXNativeChartTests PRIVATE pumpdx_chart)
+    target_compile_features(PumpDXNativeChartTests PRIVATE cxx_std_20)
+    target_compile_definitions(PumpDXNativeChartTests PRIVATE
+        PUMP_DX_TEST_NATIVE_CHART="${CMAKE_CURRENT_SOURCE_DIR}/tests/data/native-holds.pdxchart"
+    )
+
+    if(MSVC)
+        target_compile_options(PumpDXNativeChartTests PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
+    else()
+        target_compile_options(PumpDXNativeChartTests PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME PumpDXNativeChartTests COMMAND PumpDXNativeChartTests)
 endif()
