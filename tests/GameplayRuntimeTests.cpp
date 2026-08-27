@@ -1,6 +1,7 @@
 #include "game/gameplay/GameplayRuntime.hpp"
 #include "framework/render/GameplayLayout.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
@@ -56,9 +57,12 @@ void TestChartTimeProjectsToLogicalField() {
     const pumpdx::gameplay::GameplayRuntime runtime(chart);
 
     const auto startItems = runtime.BuildRenderItems(0.0);
-    Expect(startItems.size() == 1, "Only the beat-zero tap should be visible at start time.");
-    Expect(startItems.front().lane == 0, "Tap note projected to the wrong panel lane.");
-    Expect(std::abs(startItems.front().headY - pumpdx::render::layout::kReceptorY) < kTolerance,
+    Expect(startItems.size() == 2, "Top-receptor layout should preview the upcoming hold at start time.");
+    const auto tap = std::find_if(startItems.begin(), startItems.end(), [](const auto& item) {
+        return !item.isHold;
+    });
+    Expect(tap != startItems.end() && tap->lane == 0, "Tap note projected to the wrong panel lane.");
+    Expect(std::abs(tap->headY - pumpdx::render::layout::kReceptorY) < kTolerance,
         "Tap note did not project onto the receptor at its chart time.");
 
     const auto holdItems = runtime.BuildRenderItems(3.0);

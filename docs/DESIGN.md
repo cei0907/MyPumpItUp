@@ -185,6 +185,8 @@ State 16 replaces the development field placement with the fixed 1280×720 singl
 
 State 16-1 adds PIU-style consumed-hold rendering. While an active hold is currently pressed and its head has crossed the receptor, the renderer hides that passed head and clamps the body start to the receptor line; only the remaining tail is drawn, so the visible hold shortens continuously. If the panel is up, the body is not clamped and proceeds above the receptor, making the missed passage visible. A final sustain point completed while held removes the hold from the field immediately. This view behaviour derives solely from gameplay hold state and audio time; it never changes a judgement result.
 
+State 16-2 repositions the 1P HUD using the supplied Pump It Up gameplay reference: the narrow five-lane field is left anchored at X=162–734, the receptor line is lifted to Y=152, and notes rise from the lower field into that top receptor band. The horizontal energy bar is aligned above it at X=188–680 / Y=20–46. Judgement appears directly below the receptors and combo below the judgement; song information and score move to the upper-right, leaving the surrounding BGA readable. This supersedes the centred, lower-receptor State 16 placement while keeping the same shared `GameplayLayout` timing/render contract.
+
 The gameplay render order is:
 
 ```text

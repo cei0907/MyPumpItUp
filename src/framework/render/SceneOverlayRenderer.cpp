@@ -243,13 +243,13 @@ void SceneOverlayRenderer::DrawGameplay(
     brush_->SetColor(ToD2DColor(palette.heading));
     target_->DrawText(
         text.headline.data(), static_cast<UINT32>(text.headline.size()), detailFormat_,
-        D2D1::RectF(44.0F, 18.0F, 600.0F, 56.0F), brush_);
+        D2D1::RectF(760.0F, 18.0F, 1170.0F, 56.0F), brush_);
     brush_->SetColor(ToD2DColor(palette.detail));
     target_->DrawText(
         text.detail.data(), static_cast<UINT32>(text.detail.size()), instructionFormat_,
-        D2D1::RectF(44.0F, 54.0F, 600.0F, 82.0F), brush_);
+        D2D1::RectF(760.0F, 54.0F, 1170.0F, 82.0F), brush_);
 
-    brush_->SetColor(ToD2DColor(palette.panel));
+    brush_->SetColor(D2D1::ColorF(0.005F, 0.01F, 0.025F, 0.72F));
     target_->FillRoundedRectangle(
         D2D1::RoundedRect(
             D2D1::RectF(
@@ -293,16 +293,16 @@ void SceneOverlayRenderer::DrawGameplay(
         brush_,
         2.0F);
     brush_->SetColor(ToD2DColor(palette.instruction));
-    target_->DrawText(L"ENERGY", 6, instructionFormat_, D2D1::RectF(218.0F, 108.0F, 324.0F, 136.0F), brush_);
+    target_->DrawText(L"ENERGY", 6, instructionFormat_, D2D1::RectF(82.0F, 20.0F, 180.0F, 48.0F), brush_);
 
     const auto scoreText = L"SCORE  " + std::to_wstring(hud.score);
     const auto maxComboText = L"MAX " + std::to_wstring(hud.maxCombo) + L"   HOLD " + std::to_wstring(hud.holdTicks);
     brush_->SetColor(ToD2DColor(palette.heading));
     target_->DrawText(scoreText.data(), static_cast<UINT32>(scoreText.size()), detailFormat_,
-        D2D1::RectF(928.0F, 18.0F, 1230.0F, 52.0F), brush_);
+        D2D1::RectF(948.0F, 18.0F, 1230.0F, 52.0F), brush_);
     brush_->SetColor(ToD2DColor(palette.instruction));
     target_->DrawText(maxComboText.data(), static_cast<UINT32>(maxComboText.size()), instructionFormat_,
-        D2D1::RectF(928.0F, 54.0F, 1230.0F, 82.0F), brush_);
+        D2D1::RectF(948.0F, 54.0F, 1230.0F, 82.0F), brush_);
 
     for (std::uint8_t lane = 0; lane < 5; ++lane) {
         const auto left = layout::kFieldLeft + static_cast<float>(lane) * (layout::kLaneWidth + layout::kLaneGap);
@@ -384,19 +384,19 @@ void SceneOverlayRenderer::DrawGameplay(
     headlineFormat_->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
     brush_->SetColor(ToD2DColor(palette.heading));
     target_->DrawText(hud.judgement.data(), static_cast<UINT32>(hud.judgement.size()), headlineFormat_,
-        D2D1::RectF(390.0F, 178.0F, 890.0F, 246.0F), brush_);
+        D2D1::RectF(88.0F, 206.0F, 808.0F, 274.0F), brush_);
     brush_->SetColor(ToD2DColor(palette.instruction));
-    target_->DrawText(L"COMBO", 5, instructionFormat_, D2D1::RectF(548.0F, 250.0F, 732.0F, 276.0F), brush_);
+    target_->DrawText(L"COMBO", 5, instructionFormat_, D2D1::RectF(258.0F, 278.0F, 638.0F, 304.0F), brush_);
     const auto comboText = std::to_wstring(hud.combo);
     brush_->SetColor(ToD2DColor(palette.accent));
     target_->DrawText(comboText.data(), static_cast<UINT32>(comboText.size()), headlineFormat_,
-        D2D1::RectF(460.0F, 272.0F, 820.0F, 342.0F), brush_);
+        D2D1::RectF(158.0F, 300.0F, 738.0F, 370.0F), brush_);
     headlineFormat_->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 
     brush_->SetColor(ToD2DColor(palette.instruction));
     target_->DrawText(
         text.instruction.data(), static_cast<UINT32>(text.instruction.size()), instructionFormat_,
-        D2D1::RectF(326.0F, 686.0F, 954.0F, 716.0F), brush_);
+        D2D1::RectF(128.0F, 686.0F, 768.0F, 716.0F), brush_);
 
     target_->SetTransform(D2D1::Matrix3x2F::Identity());
     target_->EndDraw();
