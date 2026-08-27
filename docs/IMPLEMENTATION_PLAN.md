@@ -24,6 +24,7 @@ The `State NN` prefix is a small, reviewable Git work unit inside the numbered i
 - [x] Stage 02 / State 08 — Time-error judgement, automatic misses, score/combo state, gameplay HUD, and boundary tests
 - [x] Stage 02 / State 09 — FMOD AudioClock, local-only music path, and external song manifest
 - [x] Stage 02 / State 10 — Legacy `.stp` tap-chart import, energy state, automatic song end, and result summary
+- [x] Stage 02 / State 11 — Static BGA image/fallback, visible energy gauge, and vertical-slice completion review
 
 ## Phase 0 — Technology and development foundation
 
@@ -46,7 +47,7 @@ The selected stack is Windows-native **C++20 + Direct3D 11 + FMOD + Media Founda
 
 **Completion gate:** a dummy song/chart can transition through every scene without scene code hard-coding asset paths or game state.
 
-**Status: completed through Stage 02 / State 10.**
+**Status: completed through Stage 02 / State 11. Phase 2 completion gate passed with the local `NewSongToGod` integration.**
 
 ## Phase 2 — First playable vertical slice
 
@@ -60,6 +61,8 @@ The selected stack is Windows-native **C++20 + Direct3D 11 + FMOD + Media Founda
 - beat-to-time and judgement-window tests
 
 **Completion gate:** scroll speed changes visual distance but not judgement windows, and one song produces an accurate result.
+
+**Status: completed on the local integration build.** The first playable vertical slice now uses a local FMOD song clock, imported legacy tap chart, time-based judgement, score/combo/energy, static BGA with a safe fallback, and a result handoff. Long-note rules, animated judgement effects, and video BGA stay in Phase 3.
 
 ## Phase 3 — Pump-style gameplay and presentation
 

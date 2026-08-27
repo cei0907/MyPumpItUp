@@ -6,9 +6,11 @@
 #include <d2d1.h>
 #include <d3d11.h>
 #include <dwrite.h>
+#include <wincodec.h>
 
 #include <array>
 #include <cstdint>
+#include <filesystem>
 #include <span>
 #include <string_view>
 
@@ -37,6 +39,7 @@ public:
 
     [[nodiscard]] bool Initialize();
     [[nodiscard]] bool CreateTarget(ID3D11Texture2D* backBuffer);
+    [[nodiscard]] bool LoadGameplayBackground(const std::filesystem::path& imagePath);
     void ReleaseTarget();
     void Shutdown();
     void Draw(const core::ViewportRect& viewport, const SceneOverlayText& text, const assets::ThemePalette& palette);
@@ -45,7 +48,8 @@ public:
         const SceneOverlayText& text,
         const assets::ThemePalette& palette,
         std::span<const GameplayRenderItem> items,
-        const std::array<bool, 5>& pressedPanels);
+        const std::array<bool, 5>& pressedPanels,
+        float energyPercent);
 
 private:
     ID2D1Factory* factory_ = nullptr;
@@ -55,6 +59,11 @@ private:
     IDWriteTextFormat* headlineFormat_ = nullptr;
     IDWriteTextFormat* detailFormat_ = nullptr;
     IDWriteTextFormat* instructionFormat_ = nullptr;
+    IWICImagingFactory* wicFactory_ = nullptr;
+    ID2D1Bitmap* gameplayBackground_ = nullptr;
+    std::filesystem::path backgroundSourcePath_;
+    bool backgroundLoadAttempted_ = false;
+    bool comInitialized_ = false;
 };
 
 } // namespace pumpdx::render

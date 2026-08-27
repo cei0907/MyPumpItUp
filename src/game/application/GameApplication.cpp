@@ -253,9 +253,11 @@ void GameApplication::RenderFrame() {
     };
     const auto& palette = resourceCache_.ActiveTheme().Palette();
     if (const auto* gameplay = gameFlow_.ActiveGameplay(); gameplay != nullptr) {
+        static_cast<void>(sceneOverlayRenderer_.LoadGameplayBackground(gameFlow_.ActiveStaticBgaPath()));
         const auto items = gameplay->BuildRenderItemsForCurrentTime();
         sceneOverlayRenderer_.DrawGameplay(
-            logicalViewport_, overlayText, palette, items, gameplay->PressedPanels());
+            logicalViewport_, overlayText, palette, items, gameplay->PressedPanels(),
+            static_cast<float>(gameplay->Energy().Value()));
     } else {
         sceneOverlayRenderer_.Draw(logicalViewport_, overlayText, palette);
     }

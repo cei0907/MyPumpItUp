@@ -30,6 +30,7 @@ target_include_directories(pumpdx_core
 
 target_compile_features(pumpdx_core PUBLIC cxx_std_20)
 target_compile_definitions(pumpdx_core PUBLIC NOMINMAX)
+target_link_libraries(pumpdx_core PUBLIC windowscodecs ole32)
 
 add_library(pumpdx_scenes
     src/game/scenes/SceneManager.cpp

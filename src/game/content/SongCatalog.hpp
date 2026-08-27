@@ -14,6 +14,7 @@ struct SongDefinition final {
     SongMetadata metadata;
     std::shared_ptr<const chart::Chart> chart;
     std::filesystem::path audioFilePath;
+    std::filesystem::path staticBgaFilePath;
     double audioOffsetSeconds = 0.0;
 };
 

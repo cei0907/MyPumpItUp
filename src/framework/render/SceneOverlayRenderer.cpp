@@ -2,6 +2,10 @@
 
 #include <d2d1helper.h>
 #include <dxgi.h>
+#include <objbase.h>
+#include <wincodec.h>
+
+#include <algorithm>
 
 namespace pumpdx::render {
 
@@ -26,6 +30,12 @@ SceneOverlayRenderer::~SceneOverlayRenderer() {
 }
 
 bool SceneOverlayRenderer::Initialize() {
+    const auto comResult = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    comInitialized_ = SUCCEEDED(comResult);
+    if (FAILED(comResult) && comResult != RPC_E_CHANGED_MODE) {
+        return false;
+    }
+
     const auto factoryResult = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &factory_);
     if (FAILED(factoryResult)) {
         return false;
@@ -36,6 +46,16 @@ bool SceneOverlayRenderer::Initialize() {
         __uuidof(IDWriteFactory),
         reinterpret_cast<IUnknown**>(&writeFactory_));
     if (FAILED(writeFactoryResult)) {
+        Shutdown();
+        return false;
+    }
+
+    const auto wicResult = CoCreateInstance(
+        CLSID_WICImagingFactory,
+        nullptr,
+        CLSCTX_INPROC_SERVER,
+        IID_PPV_ARGS(&wicFactory_));
+    if (FAILED(wicResult)) {
         Shutdown();
         return false;
     }
@@ -89,7 +109,50 @@ bool SceneOverlayRenderer::CreateTarget(ID3D11Texture2D* const backBuffer) {
     return true;
 }
 
+bool SceneOverlayRenderer::LoadGameplayBackground(const std::filesystem::path& imagePath) {
+    if (target_ == nullptr || wicFactory_ == nullptr) {
+        return false;
+    }
+    if (imagePath == backgroundSourcePath_ && backgroundLoadAttempted_) {
+        return gameplayBackground_ != nullptr;
+    }
+
+    ReleaseCom(gameplayBackground_);
+    backgroundSourcePath_ = imagePath;
+    backgroundLoadAttempted_ = true;
+    if (imagePath.empty() || !std::filesystem::is_regular_file(imagePath)) {
+        return false;
+    }
+
+    IWICBitmapDecoder* decoder = nullptr;
+    IWICBitmapFrameDecode* frame = nullptr;
+    IWICFormatConverter* converter = nullptr;
+    const auto decoderResult = wicFactory_->CreateDecoderFromFilename(
+        imagePath.c_str(), nullptr, GENERIC_READ, WICDecodeMetadataCacheOnLoad, &decoder);
+    const auto frameResult = SUCCEEDED(decoderResult) ? decoder->GetFrame(0, &frame) : E_FAIL;
+    const auto converterResult = SUCCEEDED(frameResult) ? wicFactory_->CreateFormatConverter(&converter) : E_FAIL;
+    const auto initializeResult = SUCCEEDED(converterResult)
+        ? converter->Initialize(
+            frame,
+            GUID_WICPixelFormat32bppPBGRA,
+            WICBitmapDitherTypeNone,
+            nullptr,
+            0.0,
+            WICBitmapPaletteTypeCustom)
+        : E_FAIL;
+    const auto bitmapResult = SUCCEEDED(initializeResult)
+        ? target_->CreateBitmapFromWicBitmap(converter, nullptr, &gameplayBackground_)
+        : E_FAIL;
+
+    ReleaseCom(converter);
+    ReleaseCom(frame);
+    ReleaseCom(decoder);
+    return SUCCEEDED(bitmapResult);
+}
+
 void SceneOverlayRenderer::ReleaseTarget() {
+    ReleaseCom(gameplayBackground_);
+    backgroundLoadAttempted_ = false;
     ReleaseCom(brush_);
     ReleaseCom(target_);
 }
@@ -101,6 +164,11 @@ void SceneOverlayRenderer::Shutdown() {
     ReleaseCom(headlineFormat_);
     ReleaseCom(writeFactory_);
     ReleaseCom(factory_);
+    ReleaseCom(wicFactory_);
+    if (comInitialized_) {
+        CoUninitialize();
+        comInitialized_ = false;
+    }
 }
 
 void SceneOverlayRenderer::Draw(
@@ -147,7 +215,8 @@ void SceneOverlayRenderer::DrawGameplay(
     const SceneOverlayText& text,
     const assets::ThemePalette& palette,
     const std::span<const GameplayRenderItem> items,
-    const std::array<bool, 5>& pressedPanels) {
+    const std::array<bool, 5>& pressedPanels,
+    const float energyPercent) {
     if (target_ == nullptr || brush_ == nullptr || viewport.scale <= 0.0F) {
         return;
     }
@@ -164,6 +233,13 @@ void SceneOverlayRenderer::DrawGameplay(
         D2D1::Matrix3x2F::Scale(viewport.scale, viewport.scale)
         * D2D1::Matrix3x2F::Translation(viewport.x, viewport.y));
 
+    if (gameplayBackground_ != nullptr) {
+        target_->DrawBitmap(gameplayBackground_, D2D1::RectF(0.0F, 0.0F, 1280.0F, 720.0F), 0.38F);
+    } else {
+        brush_->SetColor(D2D1::ColorF(0.025F, 0.06F, 0.12F, 1.0F));
+        target_->FillRectangle(D2D1::RectF(0.0F, 0.0F, 1280.0F, 720.0F), brush_);
+    }
+
     brush_->SetColor(ToD2DColor(palette.heading));
     target_->DrawText(
         text.headline.data(), static_cast<UINT32>(text.headline.size()), detailFormat_,
@@ -177,6 +253,27 @@ void SceneOverlayRenderer::DrawGameplay(
     target_->FillRoundedRectangle(
         D2D1::RoundedRect(D2D1::RectF(fieldLeft - 18.0F, fieldTop - 14.0F, 1090.0F, fieldBottom + 14.0F), 18.0F, 18.0F),
         brush_);
+
+    constexpr float gaugeLeft = 1130.0F;
+    constexpr float gaugeTop = 104.0F;
+    constexpr float gaugeBottom = 520.0F;
+    const auto clampedEnergy = (std::clamp)(energyPercent, 0.0F, 100.0F);
+    const auto gaugeFillTop = gaugeBottom - (gaugeBottom - gaugeTop) * clampedEnergy / 100.0F;
+    brush_->SetColor(D2D1::ColorF(0.01F, 0.02F, 0.04F, 0.84F));
+    target_->FillRoundedRectangle(
+        D2D1::RoundedRect(D2D1::RectF(gaugeLeft, gaugeTop, 1192.0F, gaugeBottom), 12.0F, 12.0F), brush_);
+    if (clampedEnergy > 0.0F) {
+        brush_->SetColor(clampedEnergy > 25.0F ? ToD2DColor(palette.accent) : D2D1::ColorF(0.92F, 0.18F, 0.16F, 1.0F));
+        target_->FillRoundedRectangle(
+            D2D1::RoundedRect(
+                D2D1::RectF(gaugeLeft + 8.0F, (std::min)(gaugeFillTop, gaugeBottom - 8.0F), 1184.0F, gaugeBottom - 8.0F),
+                7.0F,
+                7.0F),
+            brush_);
+    }
+    brush_->SetColor(ToD2DColor(palette.heading));
+    target_->DrawRoundedRectangle(
+        D2D1::RoundedRect(D2D1::RectF(gaugeLeft, gaugeTop, 1192.0F, gaugeBottom), 12.0F, 12.0F), brush_, 2.0F);
 
     for (std::uint8_t lane = 0; lane < 5; ++lane) {
         const auto left = fieldLeft + static_cast<float>(lane) * (laneWidth + laneGap);

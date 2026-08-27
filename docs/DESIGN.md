@@ -152,6 +152,8 @@ State 09 supplies that replacement through `FmodAudioPlayer` and `FmodSongClock`
 
 State 10 imports the legacy five-lane `.stp` tap format without editing its source file. Each `1` in the first lane's fixed sixteenth-note grid becomes a `TapNote`; the importer deliberately preserves the old loader's two compatibility details: header counts may equal the first-lane length plus one, and trailing symbols beyond the first lane's length are ignored. The old `startPoint` is not an audio-device offset. It was a Y coordinate: with the old 45-pixel grid, 3×BPM note velocity, and receptor at Y=83, it becomes a chart lead-in of `(startPoint - 83) / 180` beats. Score judgements update a basic 0–100 energy state, and FMOD playback completion moves the session into Result with its score, max combo, and clear/fail state.
 
+State 11 adds a static BGA path to the song manifest. `SceneOverlayRenderer` loads it through WIC only while gameplay is active; a missing or unreadable file preserves the dark generated fallback instead of failing the session. The same field now contains a simple vertical 0–100 energy gauge. These are intentionally basic presentation adapters: video BGA, dynamic scene animation, and skinned gauge effects remain separate Phase 3 systems.
+
 The gameplay render order is:
 
 ```text

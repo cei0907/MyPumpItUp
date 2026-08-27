@@ -7,5 +7,6 @@ difficultyName=Foundation
 difficultyLevel=1
 audioPath=../local/songs/legacy/NewSongToGod.mp3
 chartPath=../local/charts/legacy/NewSongToGod_10.stp
+staticBgaPath=../local/bga/legacy-static-fallback.png
 audioOffsetMilliseconds=0
 legacyStartPosition=1052

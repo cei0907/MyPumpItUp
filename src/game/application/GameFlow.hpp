@@ -8,6 +8,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <filesystem>
 #include <optional>
 
 namespace pumpdx::game {
@@ -27,6 +28,7 @@ public:
     [[nodiscard]] const session::PlaySession* ActiveSession() const noexcept;
     [[nodiscard]] const gameplay::GameplayRuntime* ActiveGameplay() const noexcept;
     [[nodiscard]] bool IsUsingAudioClock() const noexcept;
+    [[nodiscard]] const std::filesystem::path& ActiveStaticBgaPath() const noexcept;
     [[nodiscard]] const session::ResultData* LatestResult() const noexcept;
 
 private:

@@ -35,6 +35,7 @@ SongCatalog SongCatalog::CreateDemoCatalog(const std::filesystem::path& manifest
                     manifest.legacyStartPosition))
                 : CreateFallbackChart(),
             .audioFilePath = manifest.audioFilePath,
+            .staticBgaFilePath = manifest.staticBgaFilePath,
             .audioOffsetSeconds = manifest.audioOffsetSeconds,
         },
     });

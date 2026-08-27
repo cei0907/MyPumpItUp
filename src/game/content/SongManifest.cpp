@@ -30,6 +30,13 @@ namespace {
     return found->second;
 }
 
+[[nodiscard]] std::string Optional(
+    const std::unordered_map<std::string, std::string>& values,
+    const std::string_view key) {
+    const auto found = values.find(std::string(key));
+    return found == values.end() ? std::string{} : found->second;
+}
+
 template <typename Integer>
 [[nodiscard]] Integer ParseInteger(const std::string& value, const std::string_view key) {
     Integer result{};
@@ -107,6 +114,12 @@ SongManifest SongManifest::Load(const std::filesystem::path& manifestPath) {
         },
         .audioFilePath = (manifestPath.parent_path() / Required(values, "audioPath")).lexically_normal(),
         .chartFilePath = (manifestPath.parent_path() / Required(values, "chartPath")).lexically_normal(),
+        .staticBgaFilePath = [&manifestPath, &values] {
+            const auto bgaPath = Optional(values, "staticBgaPath");
+            return bgaPath.empty()
+                ? std::filesystem::path{}
+                : (manifestPath.parent_path() / bgaPath).lexically_normal();
+        }(),
         .audioOffsetSeconds = offsetMilliseconds / 1000.0,
         .legacyStartPosition = legacyStartPosition,
     };

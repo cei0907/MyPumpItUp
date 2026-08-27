@@ -102,6 +102,14 @@ bool GameFlow::IsUsingAudioClock() const noexcept {
     return activeGameplay_.has_value() && audioPlayer_.IsPlaying();
 }
 
+const std::filesystem::path& GameFlow::ActiveStaticBgaPath() const noexcept {
+    static const std::filesystem::path emptyPath;
+    if (CurrentSceneId() != scenes::SceneId::Gameplay) {
+        return emptyPath;
+    }
+    return songCatalog_.At(selectedSongIndex_).staticBgaFilePath;
+}
+
 const session::ResultData* GameFlow::LatestResult() const noexcept {
     return latestResult_ ? &*latestResult_ : nullptr;
 }
