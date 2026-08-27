@@ -22,6 +22,9 @@ namespace {
 
 void ScoreState::Apply(const JudgementEvent& event) noexcept {
     ++judgedNotes_;
+    if (event.source == JudgementSource::HoldTick || event.source == JudgementSource::HoldEnd) {
+        ++holdTicks_;
+    }
     latestJudgement_ = event.judgement;
     score_ += ScoreValue(event.judgement);
 
@@ -44,6 +47,10 @@ std::uint32_t ScoreState::CurrentCombo() const noexcept {
 
 std::uint32_t ScoreState::MaxCombo() const noexcept {
     return maxCombo_;
+}
+
+std::uint32_t ScoreState::HoldTicks() const noexcept {
+    return holdTicks_;
 }
 
 std::optional<Judgement> ScoreState::LatestJudgement() const noexcept {

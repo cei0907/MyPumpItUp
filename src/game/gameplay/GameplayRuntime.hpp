@@ -8,6 +8,7 @@
 #include "game/gameplay/SongClock.hpp"
 
 #include <array>
+#include <cstddef>
 #include <memory>
 #include <vector>
 
@@ -34,9 +35,15 @@ private:
         double startSeconds = 0.0;
         double endSeconds = 0.0;
         bool isHold = false;
+        std::vector<double> holdTickSeconds;
+        std::size_t nextHoldTick = 0;
+        bool holdActivated = false;
     };
 
     [[nodiscard]] static std::vector<TimelineNote> CompileTimeline(const chart::Chart& chart);
+    void ResolveHeadJudgement(JudgementEvent event) noexcept;
+    void ProcessHoldTicks(double songTimeSeconds);
+    void TryActivateHoldFromBody(chart::PanelLane lane, double songTimeSeconds) noexcept;
     void Apply(const JudgementEvent& event) noexcept;
 
     std::unique_ptr<SongClock> songClock_;

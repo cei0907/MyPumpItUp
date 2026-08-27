@@ -39,15 +39,18 @@ void GameplayRuntime::SetPanelPressed(const chart::PanelLane lane, const bool pr
     pressedPanels_[index] = pressed;
     if (pressed && !wasPressed) {
         if (const auto event = judgementEngine_.TryJudge(lane, SongTimeSeconds()); event.has_value()) {
-            Apply(*event);
+            ResolveHeadJudgement(*event);
         }
+        TryActivateHoldFromBody(lane, SongTimeSeconds());
     }
 }
 
 void GameplayRuntime::Update() {
-    for (const auto& miss : judgementEngine_.CollectMisses(SongTimeSeconds())) {
-        Apply(miss);
+    const auto songTimeSeconds = SongTimeSeconds();
+    for (const auto& miss : judgementEngine_.CollectMisses(songTimeSeconds)) {
+        ResolveHeadJudgement(miss);
     }
+    ProcessHoldTicks(songTimeSeconds);
 }
 
 double GameplayRuntime::SongTimeSeconds() const noexcept {
@@ -100,6 +103,54 @@ std::vector<render::GameplayRenderItem> GameplayRuntime::BuildRenderItems(const 
     return items;
 }
 
+void GameplayRuntime::ResolveHeadJudgement(JudgementEvent event) noexcept {
+    if (event.noteIndex < timeline_.size() && timeline_[event.noteIndex].isHold) {
+        event.source = JudgementSource::HoldHead;
+        auto& hold = timeline_[event.noteIndex];
+        hold.holdActivated = hold.holdActivated || event.judgement != Judgement::Miss;
+    }
+    Apply(event);
+}
+
+void GameplayRuntime::ProcessHoldTicks(const double songTimeSeconds) {
+    for (std::size_t noteIndex = 0; noteIndex < timeline_.size(); ++noteIndex) {
+        auto& hold = timeline_[noteIndex];
+        if (!hold.isHold || !hold.holdActivated) {
+            continue;
+        }
+
+        while (hold.nextHoldTick < hold.holdTickSeconds.size()
+            && hold.holdTickSeconds[hold.nextHoldTick] <= songTimeSeconds) {
+            const bool isEnd = hold.nextHoldTick + 1 == hold.holdTickSeconds.size();
+            const bool isHeld = pressedPanels_[static_cast<std::size_t>(hold.lane)];
+            Apply({
+                .noteIndex = noteIndex,
+                .lane = hold.lane,
+                .judgement = isHeld ? Judgement::Perfect : Judgement::Miss,
+                .timingErrorSeconds = 0.0,
+                .source = isEnd ? JudgementSource::HoldEnd : JudgementSource::HoldTick,
+            });
+            ++hold.nextHoldTick;
+        }
+    }
+}
+
+void GameplayRuntime::TryActivateHoldFromBody(const chart::PanelLane lane, const double songTimeSeconds) noexcept {
+    for (auto& hold : timeline_) {
+        if (!hold.isHold || hold.lane != lane || hold.holdActivated
+            || songTimeSeconds < hold.startSeconds || songTimeSeconds > hold.endSeconds) {
+            continue;
+        }
+
+        hold.holdActivated = true;
+        while (hold.nextHoldTick < hold.holdTickSeconds.size()
+            && hold.holdTickSeconds[hold.nextHoldTick] < songTimeSeconds) {
+            ++hold.nextHoldTick;
+        }
+        return;
+    }
+}
+
 void GameplayRuntime::Apply(const JudgementEvent& event) noexcept {
     scoreState_.Apply(event);
     energyGauge_.Apply(event);
@@ -125,11 +176,21 @@ std::vector<GameplayRuntime::TimelineNote> GameplayRuntime::CompileTimeline(cons
                     .isHold = false,
                 });
             } else {
+                std::vector<double> holdTickSeconds;
+                holdTickSeconds.reserve(note.tickPolicy.tickCount);
+                const auto startSeconds = chart.Timing().SecondsAt(note.startBeat);
+                const auto endSeconds = chart.Timing().SecondsAt(note.endBeat);
+                const auto durationSeconds = endSeconds - startSeconds;
+                for (std::uint32_t tickIndex = 1; tickIndex <= note.tickPolicy.tickCount; ++tickIndex) {
+                    holdTickSeconds.push_back(startSeconds + durationSeconds
+                        * static_cast<double>(tickIndex) / static_cast<double>(note.tickPolicy.tickCount));
+                }
                 timeline.push_back({
                     .lane = note.lane,
-                    .startSeconds = chart.Timing().SecondsAt(note.startBeat),
-                    .endSeconds = chart.Timing().SecondsAt(note.endBeat),
+                    .startSeconds = startSeconds,
+                    .endSeconds = endSeconds,
                     .isHold = true,
+                    .holdTickSeconds = std::move(holdTickSeconds),
                 });
             }
         }, event);

@@ -26,6 +26,7 @@ The `State NN` prefix is a small, reviewable Git work unit inside the numbered i
 - [x] Stage 02 / State 10 — Legacy `.stp` tap-chart import, energy state, automatic song end, and result summary
 - [x] Stage 02 / State 11 — Static BGA image/fallback, visible energy gauge, and vertical-slice completion review
 - [x] Stage 03 / State 12 — Readable `.pdxchart` source loader, exact tuplets, tempo changes, and hold tick metadata
+- [x] Stage 03 / State 13 — Hold head/tick/end runtime judgement, combo/gauge scoring, and PIU-style re-hold tests
 
 ## Phase 0 — Technology and development foundation
 

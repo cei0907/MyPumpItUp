@@ -17,6 +17,13 @@ enum class Judgement : unsigned char {
     Miss,
 };
 
+enum class JudgementSource : unsigned char {
+    Tap,
+    HoldHead,
+    HoldTick,
+    HoldEnd,
+};
+
 struct JudgementWindows final {
     double perfectSeconds = 0.030;
     double greatSeconds = 0.060;
@@ -36,6 +43,7 @@ struct JudgementEvent final {
     chart::PanelLane lane = chart::PanelLane::Center;
     Judgement judgement = Judgement::Miss;
     double timingErrorSeconds = 0.0;
+    JudgementSource source = JudgementSource::Tap;
 };
 
 [[nodiscard]] std::wstring_view JudgementLabel(Judgement judgement) noexcept;

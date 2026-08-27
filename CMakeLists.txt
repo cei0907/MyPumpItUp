@@ -304,6 +304,21 @@ if(BUILD_TESTING)
 
     add_test(NAME PumpDXGameplayRuntimeTests COMMAND PumpDXGameplayRuntimeTests)
 
+    add_executable(PumpDXHoldRuntimeTests
+        tests/HoldRuntimeTests.cpp
+    )
+
+    target_link_libraries(PumpDXHoldRuntimeTests PRIVATE pumpdx_gameplay)
+    target_compile_features(PumpDXHoldRuntimeTests PRIVATE cxx_std_20)
+
+    if(MSVC)
+        target_compile_options(PumpDXHoldRuntimeTests PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
+    else()
+        target_compile_options(PumpDXHoldRuntimeTests PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME PumpDXHoldRuntimeTests COMMAND PumpDXHoldRuntimeTests)
+
     add_executable(PumpDXJudgementTests
         tests/JudgementTests.cpp
     )

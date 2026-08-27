@@ -74,16 +74,18 @@ A hold is one authoring event, even though its renderer and scoring system creat
 
 State 06 implements this immutable `Chart` contract with five lanes, `TapNote`, `HoldNote`, ordering, and validation.  The first executable `tickPolicy` mode is an explicit fixed count, so two holds with the same start/end beats can intentionally request 10 and 100 ticks.  Beat-interval policies are added later by the chart compiler without changing the hold event shape.
 
-`tickPolicy` explicitly controls scoring density.  It supports either an exact `intervalBeats` or a requested `tickCount`; the compiler resolves this into exact tick beats.  Therefore two holds with the same visual length can intentionally produce 10 or 100 combo events.
+`tickPolicy` explicitly controls scoring density. The first executable policy is a requested fixed `tickCount`; the runtime resolves it into evenly distributed sustain points. Therefore two holds with the same visual length can intentionally produce 10 or 100 sustain combo events.
 
 For version 1 of the gameplay rules:
 
 - the hold head is judged like a tap;
-- a successful head enables the hold;
-- every generated tick checks whether that lane is still held;
-- early release loses subsequent ticks; pressing again may resume subsequent ticks if the selected ruleset permits it;
-- the final tick occurs at the hold end;
+- a successful head enables the hold, but a body press may also catch an already-passing hold;
+- every generated sustain point checks whether that lane is still held;
+- early release loses only the sustain points that pass while the lane is up; pressing again resumes at the next available point;
+- the final sustain point always occurs at the hold end;
 - the visual body always spans `startBeat` to `endBeat`, independently of tick count.
+
+The fixed `tickCount` is the number of sustain points after the head; the last one is the end point. Therefore a completed `hold=...,10` yields one head judgement plus ten sustain combo events. This keeps hold duration, combo density, and endpoint handling explicit. Re-hold behaviour is a gameplay ruleset decision and never changes rendering behaviour.
 
 The validator rejects impossible lane overlap and malformed holds (`endBeat <= startBeat`).
 
@@ -172,6 +174,8 @@ State 10 imports the legacy five-lane `.stp` tap format without editing its sour
 State 11 adds a static BGA path to the song manifest. `SceneOverlayRenderer` loads it through WIC only while gameplay is active; a missing or unreadable file preserves the dark generated fallback instead of failing the session. The same field now contains a simple vertical 0–100 energy gauge. These are intentionally basic presentation adapters: video BGA, dynamic scene animation, and skinned gauge effects remain separate Phase 3 systems.
 
 State 12 makes long-note authoring executable rather than only structural: `.pdxchart` loads exact tuplet beats, tempo changes, tap events, and holds with independent fixed tick counts. It deliberately does not activate hold scoring yet; State 13 consumes the resolved hold head/tick/end timeline during live play.
+
+State 13 connects those holds to live gameplay. A successful head starts its per-lane hold state; a press during an already-passing body catches the hold from its next available sustain point. Evenly distributed sustain points, including one at the end, emit `HoldTick` or `HoldEnd` judgement events. The score, combo, gauge, and result summary receive those events just like taps, while `ScoreState` also records the total number of sustain points. Releasing a hold misses only the points that pass while the panel is up; pressing again resumes from the next point and never revives earlier points. This PIU-style re-hold rule is clear and testable without tying timing to rendering.
 
 The gameplay render order is:
 
