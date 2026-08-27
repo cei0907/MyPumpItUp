@@ -1,4 +1,5 @@
 #include "game/gameplay/Judgement.hpp"
+#include "game/gameplay/EnergyGauge.hpp"
 #include "game/gameplay/ScoreState.hpp"
 
 #include <cstdlib>
@@ -58,12 +59,21 @@ void TestAutomaticMissAndComboReset() {
     Expect(score.BuildSummary().judgedNotes == 2, "Every judgement and automatic miss must be counted.");
 }
 
+void TestEnergyRespondsToJudgementQuality() {
+    pumpdx::gameplay::EnergyGauge energy;
+    energy.Apply(JudgementEvent{.judgement = Judgement::Perfect});
+    Expect(energy.Value() == 52.5, "PERFECT must increase energy.");
+    energy.Apply(JudgementEvent{.judgement = Judgement::Miss});
+    Expect(energy.Value() == 45.5, "MISS must reduce energy.");
+}
+
 } // namespace
 
 int main() {
     TestJudgementWindowsAreTimeBasedAndInclusive();
     TestWrongLaneDoesNotConsumeNote();
     TestAutomaticMissAndComboReset();
+    TestEnergyRespondsToJudgementQuality();
 
     std::cout << "Judgement tests passed.\n";
     return EXIT_SUCCESS;

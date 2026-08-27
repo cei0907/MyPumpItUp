@@ -20,6 +20,8 @@ void TestManifestSeparatesDisplayMetadataFromAudioFileName() {
     Expect(manifest.metadata.id == "legacy-new-song-to-god", "Manifest must keep a stable song id.");
     Expect(manifest.metadata.title == L"New Song To God", "Display title must come from the manifest.");
     Expect(manifest.audioFilePath.filename() == "NewSongToGod.mp3", "Audio file names must remain independent from display titles.");
+    Expect(manifest.chartFilePath.filename() == "NewSongToGod_10.stp", "Chart file paths must also come from the manifest.");
+    Expect(manifest.legacyStartPosition == 1052, "Legacy visual lead-in must remain explicit metadata.");
     Expect(manifest.audioOffsetSeconds == 0.0, "Audio offset must parse as seconds.");
 }
 

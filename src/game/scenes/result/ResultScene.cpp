@@ -18,6 +18,8 @@ SceneVisual ResultScene::Visual() const {
     const auto title = result_ ? L"PumpDX Rebuild — Result: " + result_->song.title
                                : L"PumpDX Rebuild — Result";
     const auto detail = result_ ? result_->song.title + L"  /  Score " + std::to_wstring(result_->summary.score)
+            + L"  /  Max Combo " + std::to_wstring(result_->summary.maxCombo)
+            + L"  /  " + (result_->summary.cleared ? L"CLEAR" : L"FAILED")
                                 : L"No result data";
     return {
         .clearColor = {0.09F, 0.07F, 0.015F, 1.0F},

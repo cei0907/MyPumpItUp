@@ -26,6 +26,8 @@ public:
     [[nodiscard]] const SongDefinition& At(std::size_t index) const;
 
 private:
+    [[nodiscard]] static std::shared_ptr<const chart::Chart> CreateFallbackChart();
+
     std::vector<SongDefinition> songs_;
 };
 

@@ -22,6 +22,12 @@ void SceneManager::HandleKeyReleased(const std::uint32_t virtualKey) {
     requestedScene_ = currentScene_->HandleKeyReleased(virtualKey);
 }
 
+void SceneManager::RequestScene(const SceneId sceneId) noexcept {
+    if (!requestedScene_.has_value()) {
+        requestedScene_ = sceneId;
+    }
+}
+
 bool SceneManager::Update() {
     if (!requestedScene_.has_value()) {
         return false;

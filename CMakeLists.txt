@@ -110,6 +110,7 @@ add_library(pumpdx_chart
     src/game/chart/Beat.cpp
     src/game/chart/Chart.cpp
     src/game/chart/ChartValidator.cpp
+    src/game/chart/LegacyStpImporter.cpp
     src/game/chart/TimingMap.cpp
 )
 
@@ -123,6 +124,7 @@ target_link_libraries(pumpdx_session PUBLIC pumpdx_chart)
 
 add_library(pumpdx_gameplay
     src/game/gameplay/DebugSongClock.cpp
+    src/game/gameplay/EnergyGauge.cpp
     src/game/gameplay/FmodSongClock.cpp
     src/game/gameplay/GameplayRuntime.cpp
     src/game/gameplay/Judgement.cpp
@@ -332,4 +334,22 @@ if(BUILD_TESTING)
     endif()
 
     add_test(NAME PumpDXSongManifestTests COMMAND PumpDXSongManifestTests)
+
+    add_executable(PumpDXLegacyStpTests
+        tests/LegacyStpImporterTests.cpp
+    )
+
+    target_link_libraries(PumpDXLegacyStpTests PRIVATE pumpdx_chart)
+    target_compile_features(PumpDXLegacyStpTests PRIVATE cxx_std_20)
+    target_compile_definitions(PumpDXLegacyStpTests PRIVATE
+        PUMP_DX_TEST_LEGACY_STP="${CMAKE_CURRENT_SOURCE_DIR}/tests/data/legacy-taps.stp"
+    )
+
+    if(MSVC)
+        target_compile_options(PumpDXLegacyStpTests PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
+    else()
+        target_compile_options(PumpDXLegacyStpTests PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME PumpDXLegacyStpTests COMMAND PumpDXLegacyStpTests)
 endif()

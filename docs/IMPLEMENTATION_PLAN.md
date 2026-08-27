@@ -23,6 +23,7 @@ The `State NN` prefix is a small, reviewable Git work unit inside the numbered i
 - [x] Stage 02 / State 07 — Debug song clock, chart-time note projection, five-lane field, and keyboard panel state
 - [x] Stage 02 / State 08 — Time-error judgement, automatic misses, score/combo state, gameplay HUD, and boundary tests
 - [x] Stage 02 / State 09 — FMOD AudioClock, local-only music path, and external song manifest
+- [x] Stage 02 / State 10 — Legacy `.stp` tap-chart import, energy state, automatic song end, and result summary
 
 ## Phase 0 — Technology and development foundation
 
@@ -45,14 +46,14 @@ The selected stack is Windows-native **C++20 + Direct3D 11 + FMOD + Media Founda
 
 **Completion gate:** a dummy song/chart can transition through every scene without scene code hard-coding asset paths or game state.
 
-**Status: completed through Stage 02 / State 09.**
+**Status: completed through Stage 02 / State 10.**
 
 ## Phase 2 — First playable vertical slice
 
 **Purpose:** Play one complete song using accurate audio time.
 
 - `AudioClock` and music playback (the current debug clock is an intentional temporary adapter)
-- tap-chart loading, active note views, scroll-speed control
+- tap-chart loading, active note views, scroll-speed control (State 10 imports `NewSongToGod_10.stp` without modifying it)
 - keyboard input, time-error judgement, automatic misses
 - combo, score, basic life gauge, and result scene
 - static BGA fallback

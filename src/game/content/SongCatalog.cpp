@@ -1,6 +1,7 @@
 #include "game/content/SongCatalog.hpp"
 
 #include "game/chart/NoteEvent.hpp"
+#include "game/chart/LegacyStpImporter.hpp"
 #include "game/content/SongManifest.hpp"
 
 #include <memory>
@@ -23,32 +24,30 @@ SongCatalog::SongCatalog(std::vector<SongDefinition> songs)
 
 SongCatalog SongCatalog::CreateDemoCatalog(const std::filesystem::path& manifestPath) {
     const auto manifest = SongManifest::Load(manifestPath);
+    const auto hasLegacyChart = std::filesystem::is_regular_file(manifest.chartFilePath);
     return SongCatalog({
         {
             .metadata = manifest.metadata,
-            .chart = std::make_shared<const chart::Chart>(
-                "state-06-demo-foundation",
-                chart::TimingMap({{{0}, 120.0}}),
-                std::vector<chart::NoteEvent>{
-                    chart::TapNote{.beat = {0}, .lane = chart::PanelLane::DownLeft},
-                    chart::TapNote{.beat = {1}, .lane = chart::PanelLane::UpLeft},
-                    chart::HoldNote{
-                        .startBeat = {4},
-                        .endBeat = {12},
-                        .lane = chart::PanelLane::Center,
-                        .tickPolicy = chart::HoldTickPolicy::FixedCount(10),
-                    },
-                    chart::HoldNote{
-                        .startBeat = {16},
-                        .endBeat = {24},
-                        .lane = chart::PanelLane::UpRight,
-                        .tickPolicy = chart::HoldTickPolicy::FixedCount(100),
-                    },
-                }),
+            .chart = hasLegacyChart
+                ? std::make_shared<const chart::Chart>(chart::LegacyStpImporter::LoadTapChart(
+                    manifest.chartFilePath,
+                    manifest.metadata.id + "-legacy-stp",
+                    manifest.legacyStartPosition))
+                : CreateFallbackChart(),
             .audioFilePath = manifest.audioFilePath,
             .audioOffsetSeconds = manifest.audioOffsetSeconds,
         },
     });
+}
+
+std::shared_ptr<const chart::Chart> SongCatalog::CreateFallbackChart() {
+    return std::make_shared<const chart::Chart>(
+        "fallback-foundation-chart",
+        chart::TimingMap({{{0}, 120.0}}),
+        std::vector<chart::NoteEvent>{
+            chart::TapNote{.beat = {0}, .lane = chart::PanelLane::DownLeft},
+            chart::TapNote{.beat = {1}, .lane = chart::PanelLane::UpLeft},
+        });
 }
 
 std::size_t SongCatalog::Count() const noexcept {

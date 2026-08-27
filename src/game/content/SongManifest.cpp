@@ -90,6 +90,10 @@ SongManifest SongManifest::Load(const std::filesystem::path& manifestPath) {
     }
 
     const auto offsetMilliseconds = ParseDouble(Required(values, "audioOffsetMilliseconds"), "audioOffsetMilliseconds");
+    const auto legacyStartPosition = ParseInteger<int>(Required(values, "legacyStartPosition"), "legacyStartPosition");
+    if (legacyStartPosition < 83) {
+        throw std::runtime_error("Song manifest legacyStartPosition must be at least 83.");
+    }
     const auto title = Required(values, "title");
     const auto artist = Required(values, "artist");
     const auto difficultyName = Required(values, "difficultyName");
@@ -101,8 +105,10 @@ SongManifest SongManifest::Load(const std::filesystem::path& manifestPath) {
             .difficultyName = std::wstring(difficultyName.begin(), difficultyName.end()),
             .difficultyLevel = static_cast<std::uint8_t>(level),
         },
-        .audioFilePath = manifestPath.parent_path() / Required(values, "audioPath"),
+        .audioFilePath = (manifestPath.parent_path() / Required(values, "audioPath")).lexically_normal(),
+        .chartFilePath = (manifestPath.parent_path() / Required(values, "chartPath")).lexically_normal(),
         .audioOffsetSeconds = offsetMilliseconds / 1000.0,
+        .legacyStartPosition = legacyStartPosition,
     };
 }
 

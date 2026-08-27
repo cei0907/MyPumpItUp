@@ -37,6 +37,7 @@ private:
     content::SongCatalog songCatalog_;
     scenes::SceneManager sceneManager_;
     audio::FmodAudioPlayer audioPlayer_;
+    bool audioPlaybackStarted_ = false;
     std::size_t selectedSongIndex_ = 0;
     std::optional<session::PlaySession> activeSession_;
     std::optional<gameplay::GameplayRuntime> activeGameplay_;

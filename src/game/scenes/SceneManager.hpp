@@ -14,6 +14,7 @@ public:
     SceneManager();
 
     void HandleKeyReleased(std::uint32_t virtualKey);
+    void RequestScene(SceneId sceneId) noexcept;
     [[nodiscard]] bool Update();
     void SetResultData(session::ResultData result);
 

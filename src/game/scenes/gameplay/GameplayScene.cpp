@@ -11,10 +11,10 @@ SceneId GameplayScene::Id() const noexcept {
 SceneVisual GameplayScene::Visual() const {
     return {
         .clearColor = {0.015F, 0.04F, 0.075F, 1.0F},
-        .windowTitle = L"PumpDX Rebuild — Gameplay (Enter: Result, Esc: Song Select)",
+        .windowTitle = L"PumpDX Rebuild — Gameplay (Enter: Skip, Esc: Song Select)",
         .headline = L"GAMEPLAY",
         .detail = L"Preparing selected chart",
-        .instruction = L"Enter: finish demo     Esc: cancel session",
+        .instruction = L"Z / Q / S / E / C: panels     Enter: skip     Esc: cancel",
     };
 }
 

@@ -11,6 +11,7 @@ public:
 
     [[nodiscard]] static Beat Zero() noexcept;
     [[nodiscard]] double ToDouble() const noexcept;
+    [[nodiscard]] Beat operator+(const Beat& other) const;
     [[nodiscard]] Beat operator-(const Beat& other) const;
 
     [[nodiscard]] std::strong_ordering operator<=>(const Beat& other) const noexcept;

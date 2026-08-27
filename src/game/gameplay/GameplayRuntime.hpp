@@ -3,6 +3,7 @@
 #include "framework/render/SceneOverlayRenderer.hpp"
 #include "game/chart/Chart.hpp"
 #include "game/gameplay/Judgement.hpp"
+#include "game/gameplay/EnergyGauge.hpp"
 #include "game/gameplay/ScoreState.hpp"
 #include "game/gameplay/SongClock.hpp"
 
@@ -22,6 +23,8 @@ public:
     [[nodiscard]] double SongTimeSeconds() const noexcept;
     [[nodiscard]] const std::array<bool, 5>& PressedPanels() const noexcept;
     [[nodiscard]] const ScoreState& Score() const noexcept;
+    [[nodiscard]] const EnergyGauge& Energy() const noexcept;
+    [[nodiscard]] session::GameplaySummary BuildResultSummary() const noexcept;
     [[nodiscard]] std::vector<render::GameplayRenderItem> BuildRenderItems(double songTimeSeconds) const;
     [[nodiscard]] std::vector<render::GameplayRenderItem> BuildRenderItemsForCurrentTime() const;
 
@@ -40,6 +43,7 @@ private:
     std::vector<TimelineNote> timeline_;
     JudgementEngine judgementEngine_;
     ScoreState scoreState_;
+    EnergyGauge energyGauge_;
     std::array<bool, 5> pressedPanels_{};
 };
 

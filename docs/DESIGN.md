@@ -150,6 +150,8 @@ State 07 adds the first gameplay-field projection: five lanes, receptors, tap he
 
 State 09 supplies that replacement through `FmodAudioPlayer` and `FmodSongClock`. A song manifest owns the stable song id, display metadata, original audio filename, and an explicit millisecond offset; the C++ code does not infer titles from files. Music lives below ignored `assets/local/`, while manifests remain versioned. The FMOD SDK path is a local CMake setting, and its runtime DLL is copied next to the executable only for local builds.
 
+State 10 imports the legacy five-lane `.stp` tap format without editing its source file. Each `1` in the first lane's fixed sixteenth-note grid becomes a `TapNote`; the importer deliberately preserves the old loader's two compatibility details: header counts may equal the first-lane length plus one, and trailing symbols beyond the first lane's length are ignored. The old `startPoint` is not an audio-device offset. It was a Y coordinate: with the old 45-pixel grid, 3×BPM note velocity, and receptor at Y=83, it becomes a chart lead-in of `(startPoint - 83) / 180` beats. Score judgements update a basic 0–100 energy state, and FMOD playback completion moves the session into Result with its score, max combo, and clear/fail state.
+
 The gameplay render order is:
 
 ```text

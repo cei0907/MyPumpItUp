@@ -62,6 +62,16 @@ const ScoreState& GameplayRuntime::Score() const noexcept {
     return scoreState_;
 }
 
+const EnergyGauge& GameplayRuntime::Energy() const noexcept {
+    return energyGauge_;
+}
+
+session::GameplaySummary GameplayRuntime::BuildResultSummary() const noexcept {
+    auto summary = scoreState_.BuildSummary();
+    summary.cleared = energyGauge_.IsAlive();
+    return summary;
+}
+
 std::vector<render::GameplayRenderItem> GameplayRuntime::BuildRenderItems(const double songTimeSeconds) const {
     std::vector<render::GameplayRenderItem> items;
     items.reserve(timeline_.size());
@@ -92,6 +102,7 @@ std::vector<render::GameplayRenderItem> GameplayRuntime::BuildRenderItems(const 
 
 void GameplayRuntime::Apply(const JudgementEvent& event) noexcept {
     scoreState_.Apply(event);
+    energyGauge_.Apply(event);
 }
 
 std::vector<render::GameplayRenderItem> GameplayRuntime::BuildRenderItemsForCurrentTime() const {

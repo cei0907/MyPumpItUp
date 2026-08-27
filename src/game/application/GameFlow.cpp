@@ -37,6 +37,9 @@ bool GameFlow::Update() {
     audioPlayer_.Update();
     if (activeGameplay_) {
         activeGameplay_->Update();
+        if (audioPlaybackStarted_ && !audioPlayer_.IsPlaying() && audioPlayer_.PlaybackSeconds() > 0.0) {
+            sceneManager_.RequestScene(scenes::SceneId::Result);
+        }
     }
 
     const auto previousScene = sceneManager_.CurrentId();
@@ -73,6 +76,7 @@ scenes::SceneVisual GameFlow::CurrentSceneVisual() const {
         visual.detail = L"Score " + std::to_wstring(score.Score())
             + L"  Combo " + std::to_wstring(score.CurrentCombo())
             + L"  Max " + std::to_wstring(score.MaxCombo())
+            + L"  Energy " + std::to_wstring(static_cast<int>(activeGameplay_->Energy().Value()))
             + (IsUsingAudioClock() ? L"  /  FMOD AudioClock" : L"  /  Debug clock (audio unavailable)");
     }
     return visual;
@@ -105,7 +109,9 @@ const session::ResultData* GameFlow::LatestResult() const noexcept {
 void GameFlow::BeginSelectedSession() {
     activeSession_.emplace(SelectedSong(), songCatalog_.At(selectedSongIndex_).chart);
     const auto& song = songCatalog_.At(selectedSongIndex_);
+    audioPlaybackStarted_ = false;
     if (audioPlayer_.Play(song.audioFilePath)) {
+        audioPlaybackStarted_ = true;
         activeGameplay_.emplace(
             activeSession_->SelectedChart(),
             std::make_unique<gameplay::FmodSongClock>(audioPlayer_, song.audioOffsetSeconds));
@@ -120,8 +126,9 @@ void GameFlow::FinishActiveSession() {
         throw std::logic_error("Gameplay cannot finish without an active session.");
     }
 
-    latestResult_ = activeSession_->BuildResult(activeGameplay_ ? activeGameplay_->Score().BuildSummary() : session::GameplaySummary{});
+    latestResult_ = activeSession_->BuildResult(activeGameplay_ ? activeGameplay_->BuildResultSummary() : session::GameplaySummary{});
     audioPlayer_.Stop();
+    audioPlaybackStarted_ = false;
     activeGameplay_.reset();
     activeSession_.reset();
     sceneManager_.SetResultData(*latestResult_);
@@ -129,6 +136,7 @@ void GameFlow::FinishActiveSession() {
 
 void GameFlow::CancelActiveSession() noexcept {
     audioPlayer_.Stop();
+    audioPlaybackStarted_ = false;
     activeGameplay_.reset();
     activeSession_.reset();
 }

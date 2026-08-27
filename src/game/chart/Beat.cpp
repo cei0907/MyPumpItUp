@@ -28,6 +28,13 @@ double Beat::ToDouble() const noexcept {
     return static_cast<double>(numerator_) / static_cast<double>(denominator_);
 }
 
+Beat Beat::operator+(const Beat& other) const {
+    return {
+        numerator_ * other.denominator_ + other.numerator_ * denominator_,
+        denominator_ * other.denominator_,
+    };
+}
+
 Beat Beat::operator-(const Beat& other) const {
     return {
         numerator_ * other.denominator_ - other.numerator_ * denominator_,
