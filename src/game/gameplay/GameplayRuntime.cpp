@@ -84,10 +84,19 @@ std::vector<render::GameplayRenderItem> GameplayRuntime::BuildRenderItems(const 
         if (!note.isHold && judgementEngine_.IsResolved(index)) {
             continue;
         }
+        if (note.isHold && note.holdFinishedSuccessfully) {
+            continue;
+        }
         const auto headY = ToScreenY(note.startSeconds, songTimeSeconds);
         const auto tailY = note.isHold ? ToScreenY(note.endSeconds, songTimeSeconds) : headY;
-        const auto top = std::min(headY, tailY);
-        const auto bottom = std::max(headY, tailY);
+        const auto isCurrentlyHeld = note.isHold
+            && note.holdActivated
+            && note.nextHoldTick < note.holdTickSeconds.size()
+            && pressedPanels_[static_cast<std::size_t>(note.lane)]
+            && headY < render::layout::kReceptorY;
+        const auto holdBodyStartY = isCurrentlyHeld ? render::layout::kReceptorY : headY;
+        const auto top = std::min(holdBodyStartY, tailY);
+        const auto bottom = std::max(holdBodyStartY, tailY);
         if (bottom < kVisibleTop || top > kVisibleBottom) {
             continue;
         }
@@ -95,10 +104,12 @@ std::vector<render::GameplayRenderItem> GameplayRuntime::BuildRenderItems(const 
         items.push_back({
             .lane = static_cast<std::uint8_t>(note.lane),
             .headY = headY,
+            .holdBodyStartY = holdBodyStartY,
             .tailY = tailY,
             .isHold = note.isHold,
             .isHoldActive = note.isHold && note.holdActivated && note.nextHoldTick < note.holdTickSeconds.size(),
             .isHoldDamaged = note.isHold && note.holdHasMissedTick,
+            .showHead = !isCurrentlyHeld,
         });
     }
 
@@ -134,6 +145,8 @@ void GameplayRuntime::ProcessHoldTicks(const double songTimeSeconds) {
             });
             if (!isHeld) {
                 hold.holdHasMissedTick = true;
+            } else if (isEnd) {
+                hold.holdFinishedSuccessfully = true;
             }
             ++hold.nextHoldTick;
         }

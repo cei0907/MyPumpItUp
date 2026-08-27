@@ -25,10 +25,12 @@ struct SceneOverlayText final {
 struct GameplayRenderItem final {
     std::uint8_t lane = 0;
     float headY = 0.0F;
+    float holdBodyStartY = 0.0F;
     float tailY = 0.0F;
     bool isHold = false;
     bool isHoldActive = false;
     bool isHoldDamaged = false;
+    bool showHead = true;
 };
 
 struct GameplayHud final {

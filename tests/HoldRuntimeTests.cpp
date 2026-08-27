@@ -1,4 +1,5 @@
 #include "game/gameplay/GameplayRuntime.hpp"
+#include "framework/render/GameplayLayout.hpp"
 
 #include <cstdlib>
 #include <iostream>
@@ -54,10 +55,19 @@ void TestCompletedHoldAwardsHeadAndEverySustainPoint() {
     const auto activeItems = runtime.BuildRenderItemsForCurrentTime();
     Expect(activeItems.size() == 1 && activeItems.front().isHoldActive,
         "A held body must expose its active visual state.");
-    for (const auto seconds : {2.0, 3.0, 4.0, 5.0}) {
+    clockView->SetSeconds(2.0);
+    runtime.Update();
+    const auto consumedItems = runtime.BuildRenderItemsForCurrentTime();
+    Expect(consumedItems.size() == 1 && !consumedItems.front().showHead,
+        "A held note head must disappear after crossing the receptor.");
+    Expect(consumedItems.front().holdBodyStartY == pumpdx::render::layout::kReceptorY,
+        "A held note body must be clipped to the receptor after its head passes.");
+    for (const auto seconds : {3.0, 4.0, 5.0}) {
         clockView->SetSeconds(seconds);
         runtime.Update();
     }
+    Expect(runtime.BuildRenderItemsForCurrentTime().empty(),
+        "A hold completed at its end tick must leave the field immediately.");
 
     Expect(runtime.Score().Score() == 5000, "Hold head and all four sustain points must score PERFECT.");
     Expect(runtime.Score().CurrentCombo() == 5, "A completed hold must keep one continuous combo.");
@@ -81,6 +91,9 @@ void TestReleaseMissesOnlyTheGapAndRepressResumes() {
     const auto damagedItems = runtime.BuildRenderItemsForCurrentTime();
     Expect(damagedItems.size() == 1 && damagedItems.front().isHoldDamaged,
         "A missed sustain point must expose the damaged hold visual state.");
+    Expect(damagedItems.front().showHead
+            && damagedItems.front().holdBodyStartY < pumpdx::render::layout::kReceptorY,
+        "An unheld note body must continue above the receptor instead of being clipped.");
     clockView->SetSeconds(3.2);
     runtime.SetPanelPressed(pumpdx::chart::PanelLane::Center, true);
     clockView->SetSeconds(5.0);

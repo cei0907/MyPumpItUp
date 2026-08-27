@@ -346,9 +346,9 @@ void SceneOverlayRenderer::DrawGameplay(
                 D2D1::RoundedRect(
                     D2D1::RectF(
                         centerX - 22.0F,
-                        (std::min)(item.headY, item.tailY),
+                        (std::min)(item.holdBodyStartY, item.tailY),
                         centerX + 22.0F,
-                        (std::max)(item.headY, item.tailY)),
+                        (std::max)(item.holdBodyStartY, item.tailY)),
                     12.0F,
                     12.0F),
                 brush_);
@@ -358,9 +358,9 @@ void SceneOverlayRenderer::DrawGameplay(
                     D2D1::RoundedRect(
                         D2D1::RectF(
                             centerX - 22.0F,
-                            (std::min)(item.headY, item.tailY),
+                            (std::min)(item.holdBodyStartY, item.tailY),
                             centerX + 22.0F,
-                            (std::max)(item.headY, item.tailY)),
+                            (std::max)(item.holdBodyStartY, item.tailY)),
                         12.0F,
                         12.0F),
                     brush_,
@@ -368,14 +368,16 @@ void SceneOverlayRenderer::DrawGameplay(
             }
         }
 
-        brush_->SetColor(item.isHold && item.isHoldActive ? ToD2DColor(palette.heading) : ToD2DColor(palette.accent));
-        target_->FillRoundedRectangle(
-            D2D1::RoundedRect(D2D1::RectF(centerX - 45.0F, item.headY - 18.0F, centerX + 45.0F, item.headY + 18.0F), 8.0F, 8.0F),
-            brush_);
-        brush_->SetColor(ToD2DColor(palette.heading));
-        target_->DrawRoundedRectangle(
-            D2D1::RoundedRect(D2D1::RectF(centerX - 45.0F, item.headY - 18.0F, centerX + 45.0F, item.headY + 18.0F), 8.0F, 8.0F),
-            brush_, 2.0F);
+        if (item.showHead) {
+            brush_->SetColor(item.isHold && item.isHoldActive ? ToD2DColor(palette.heading) : ToD2DColor(palette.accent));
+            target_->FillRoundedRectangle(
+                D2D1::RoundedRect(D2D1::RectF(centerX - 45.0F, item.headY - 18.0F, centerX + 45.0F, item.headY + 18.0F), 8.0F, 8.0F),
+                brush_);
+            brush_->SetColor(ToD2DColor(palette.heading));
+            target_->DrawRoundedRectangle(
+                D2D1::RoundedRect(D2D1::RectF(centerX - 45.0F, item.headY - 18.0F, centerX + 45.0F, item.headY + 18.0F), 8.0F, 8.0F),
+                brush_, 2.0F);
+        }
     }
     target_->PopAxisAlignedClip();
 

@@ -30,6 +30,7 @@ The `State NN` prefix is a small, reviewable Git work unit inside the numbered i
 - [x] Stage 03 / State 14 — NewSongToGod native hold playtest chart and active-hold field feedback
 - [x] Stage 03 / State 15 — Same-lane tap/hold collision validation and conflict-free legacy hold overlay
 - [x] Stage 03 / State 16 — PIU-inspired 1P field/HUD layout, judgement/combo feedback, and hold-state visuals
+- [x] Stage 03 / State 16-1 — Consumed-hold body clipping, release continuation, and successful-end cleanup
 
 ## Phase 0 — Technology and development foundation
 

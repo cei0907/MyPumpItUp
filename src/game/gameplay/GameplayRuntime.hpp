@@ -39,6 +39,7 @@ private:
         std::size_t nextHoldTick = 0;
         bool holdActivated = false;
         bool holdHasMissedTick = false;
+        bool holdFinishedSuccessfully = false;
     };
 
     [[nodiscard]] static std::vector<TimelineNote> CompileTimeline(const chart::Chart& chart);

@@ -183,6 +183,8 @@ State 15 tightens the lane contract after validating the real legacy tap stream:
 
 State 16 replaces the development field placement with the fixed 1280×720 single-player gameplay layout. `GameplayLayout` is the shared source of truth for both chart projection and Direct2D rendering: the centred five-lane field spans X=290–990, the receptor line is Y=498, and the field is clipped from Y=156–672. A horizontal energy bar sits directly above the field, song information and score occupy the top band, and judgement/combo feedback is centred above the receptors. The HUD exposes score, combo, max combo, and hold-tick count without putting gameplay state in the renderer. Receptors brighten while pressed; inactive holds are muted, caught holds use the active colour, and a hold that has missed a sustain point receives an amber/red warning outline. These are semantic placeholder visuals; final arrows, skins, particles, and animated transitions remain theme-driven work.
 
+State 16-1 adds PIU-style consumed-hold rendering. While an active hold is currently pressed and its head has crossed the receptor, the renderer hides that passed head and clamps the body start to the receptor line; only the remaining tail is drawn, so the visible hold shortens continuously. If the panel is up, the body is not clamped and proceeds above the receptor, making the missed passage visible. A final sustain point completed while held removes the hold from the field immediately. This view behaviour derives solely from gameplay hold state and audio time; it never changes a judgement result.
+
 The gameplay render order is:
 
 ```text
