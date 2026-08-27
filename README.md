@@ -2,7 +2,7 @@
 
 2019년에 제작한 DirectX 기반 개인 프로젝트를, 유지보수 가능한 구조와 시간 기반 리듬 게임 시스템으로 다시 만드는 Pump It Up 스타일 5패널 리듬 게임입니다.
 
-> 현재 상태: **0·1단계 완료 · 2단계(첫 플레이 가능 수직 슬라이스) 진행 중 · Stage 02 / State 07 완료**
+> 현재 상태: **0·1단계 완료 · 2단계(첫 플레이 가능 수직 슬라이스) 진행 중 · Stage 02 / State 09 완료**
 
 소스는 `src/framework`(창·렌더·입력 등 재사용 가능한 기술 기반)과 `src/game`(PumpDX 전용 채보·게임플레이·씬)으로 명확히 나눕니다. 게임 코드는 framework를 사용하지만 framework는 게임 규칙을 알지 않습니다.
 
@@ -24,6 +24,7 @@
 - Direct3D 11
 - CMake 3.24 이상
 - Visual Studio의 **Desktop development with C++** 및 Windows SDK
+- FMOD Studio API (실제 음악 재생을 위한 선택적 로컬 SDK)
 
 예상 빌드 명령:
 
@@ -36,6 +37,8 @@ ctest --test-dir build --output-on-failure
 ```
 
 Visual Studio 설치 위치가 일반 경로가 아닌 경우에도, 해당 설치의 `VsDevCmd.bat`을 먼저 실행한 개발자 명령 프롬프트에서 같은 명령을 사용합니다. Ninja 생성기는 Visual Studio의 C++ 개발 환경을 직접 사용하므로 설치 위치와 Visual Studio IDE 생성기 인식 차이에 영향을 덜 받습니다.
+
+FMOD Core API가 기본 설치 위치가 아닌 경우 CMake의 `PUMP_DX_FMOD_API_ROOT`에 `api/core` 폴더를 지정합니다. `assets/catalog/legacy-new-song-to-god.song.manifest`는 화면 표시 제목과 원본 MP3 파일명을 분리하며, 실제 음원은 Git에서 제외된 `assets/local/`에 둡니다.
 
 ## 리소스와 권리
 

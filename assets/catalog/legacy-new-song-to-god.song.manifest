@@ -1,0 +1,9 @@
+# This file is safe to commit. The referenced MP3 is local-only and ignored by Git.
+schemaVersion=1
+id=legacy-new-song-to-god
+title=New Song To God
+artist=Legacy local collection
+difficultyName=Foundation
+difficultyLevel=1
+audioPath=../local/songs/legacy/NewSongToGod.mp3
+audioOffsetMilliseconds=0

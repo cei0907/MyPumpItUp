@@ -1,6 +1,7 @@
 #include "game/content/SongCatalog.hpp"
 
 #include "game/chart/NoteEvent.hpp"
+#include "game/content/SongManifest.hpp"
 
 #include <memory>
 #include <stdexcept>
@@ -20,16 +21,11 @@ SongCatalog::SongCatalog(std::vector<SongDefinition> songs)
     }
 }
 
-SongCatalog SongCatalog::CreateDemoCatalog() {
+SongCatalog SongCatalog::CreateDemoCatalog(const std::filesystem::path& manifestPath) {
+    const auto manifest = SongManifest::Load(manifestPath);
     return SongCatalog({
         {
-            .metadata = {
-                .id = "state-06-demo",
-                .title = L"State 06 Demo",
-                .artist = L"PumpDX Rebuild",
-                .difficultyName = L"Foundation",
-                .difficultyLevel = 1,
-            },
+            .metadata = manifest.metadata,
             .chart = std::make_shared<const chart::Chart>(
                 "state-06-demo-foundation",
                 chart::TimingMap({{{0}, 120.0}}),
@@ -49,6 +45,8 @@ SongCatalog SongCatalog::CreateDemoCatalog() {
                         .tickPolicy = chart::HoldTickPolicy::FixedCount(100),
                     },
                 }),
+            .audioFilePath = manifest.audioFilePath,
+            .audioOffsetSeconds = manifest.audioOffsetSeconds,
         },
     });
 }

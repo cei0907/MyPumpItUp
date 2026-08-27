@@ -1,5 +1,6 @@
 #pragma once
 
+#include "framework/audio/FmodAudioPlayer.hpp"
 #include "game/content/SongCatalog.hpp"
 #include "game/gameplay/GameplayRuntime.hpp"
 #include "game/scenes/SceneManager.hpp"
@@ -25,6 +26,7 @@ public:
     [[nodiscard]] const chart::Chart& SelectedChart() const;
     [[nodiscard]] const session::PlaySession* ActiveSession() const noexcept;
     [[nodiscard]] const gameplay::GameplayRuntime* ActiveGameplay() const noexcept;
+    [[nodiscard]] bool IsUsingAudioClock() const noexcept;
     [[nodiscard]] const session::ResultData* LatestResult() const noexcept;
 
 private:
@@ -34,6 +36,7 @@ private:
 
     content::SongCatalog songCatalog_;
     scenes::SceneManager sceneManager_;
+    audio::FmodAudioPlayer audioPlayer_;
     std::size_t selectedSongIndex_ = 0;
     std::optional<session::PlaySession> activeSession_;
     std::optional<gameplay::GameplayRuntime> activeGameplay_;

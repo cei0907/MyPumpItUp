@@ -1,14 +1,18 @@
 #include "game/application/GameFlow.hpp"
 
 #include "framework/input/KeyCode.hpp"
+#include "game/gameplay/FmodSongClock.hpp"
 
+#include <filesystem>
+#include <memory>
 #include <stdexcept>
 #include <string>
 
 namespace pumpdx::game {
 
 GameFlow::GameFlow()
-    : songCatalog_(content::SongCatalog::CreateDemoCatalog()) {
+    : songCatalog_(content::SongCatalog::CreateDemoCatalog(std::filesystem::path(PUMP_DX_DEFAULT_SONG_MANIFEST))) {
+    static_cast<void>(audioPlayer_.Initialize());
 }
 
 void GameFlow::HandleKeyPressed(const std::uint32_t virtualKey) {
@@ -30,6 +34,7 @@ void GameFlow::HandleKeyReleased(const std::uint32_t virtualKey) {
 }
 
 bool GameFlow::Update() {
+    audioPlayer_.Update();
     if (activeGameplay_) {
         activeGameplay_->Update();
     }
@@ -68,7 +73,7 @@ scenes::SceneVisual GameFlow::CurrentSceneVisual() const {
         visual.detail = L"Score " + std::to_wstring(score.Score())
             + L"  Combo " + std::to_wstring(score.CurrentCombo())
             + L"  Max " + std::to_wstring(score.MaxCombo())
-            + L"  /  Debug clock";
+            + (IsUsingAudioClock() ? L"  /  FMOD AudioClock" : L"  /  Debug clock (audio unavailable)");
     }
     return visual;
 }
@@ -89,13 +94,24 @@ const gameplay::GameplayRuntime* GameFlow::ActiveGameplay() const noexcept {
     return activeGameplay_ ? &*activeGameplay_ : nullptr;
 }
 
+bool GameFlow::IsUsingAudioClock() const noexcept {
+    return activeGameplay_.has_value() && audioPlayer_.IsPlaying();
+}
+
 const session::ResultData* GameFlow::LatestResult() const noexcept {
     return latestResult_ ? &*latestResult_ : nullptr;
 }
 
 void GameFlow::BeginSelectedSession() {
     activeSession_.emplace(SelectedSong(), songCatalog_.At(selectedSongIndex_).chart);
-    activeGameplay_.emplace(activeSession_->SelectedChart());
+    const auto& song = songCatalog_.At(selectedSongIndex_);
+    if (audioPlayer_.Play(song.audioFilePath)) {
+        activeGameplay_.emplace(
+            activeSession_->SelectedChart(),
+            std::make_unique<gameplay::FmodSongClock>(audioPlayer_, song.audioOffsetSeconds));
+    } else {
+        activeGameplay_.emplace(activeSession_->SelectedChart());
+    }
     latestResult_.reset();
 }
 
@@ -105,12 +121,14 @@ void GameFlow::FinishActiveSession() {
     }
 
     latestResult_ = activeSession_->BuildResult(activeGameplay_ ? activeGameplay_->Score().BuildSummary() : session::GameplaySummary{});
+    audioPlayer_.Stop();
     activeGameplay_.reset();
     activeSession_.reset();
     sceneManager_.SetResultData(*latestResult_);
 }
 
 void GameFlow::CancelActiveSession() noexcept {
+    audioPlayer_.Stop();
     activeGameplay_.reset();
     activeSession_.reset();
 }

@@ -22,6 +22,7 @@ The `State NN` prefix is a small, reviewable Git work unit inside the numbered i
 - [x] State 06 — Immutable chart model, five-panel note events, and explicit hold tick counts
 - [x] Stage 02 / State 07 — Debug song clock, chart-time note projection, five-lane field, and keyboard panel state
 - [x] Stage 02 / State 08 — Time-error judgement, automatic misses, score/combo state, gameplay HUD, and boundary tests
+- [x] Stage 02 / State 09 — FMOD AudioClock, local-only music path, and external song manifest
 
 ## Phase 0 — Technology and development foundation
 
@@ -44,7 +45,7 @@ The selected stack is Windows-native **C++20 + Direct3D 11 + FMOD + Media Founda
 
 **Completion gate:** a dummy song/chart can transition through every scene without scene code hard-coding asset paths or game state.
 
-**Status: completed through Stage 02 / State 08.**
+**Status: completed through Stage 02 / State 09.**
 
 ## Phase 2 — First playable vertical slice
 

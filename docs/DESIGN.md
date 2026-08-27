@@ -148,6 +148,8 @@ The State 04 foundation uses a generic Direct2D/DirectWrite scene overlay over t
 
 State 07 adds the first gameplay-field projection: five lanes, receptors, tap heads, and hold bodies are derived from chart seconds and the current song-clock seconds. State 08 then validates the rules with the same monotonic `DebugSongClock`: input edges are compared only as `inputTime - noteTime`, automatic misses occur after the final window, and rendering position is never read back for judgement. The default development windows are Perfect ≤30 ms, Great ≤60 ms, Good ≤100 ms, and Bad ≤150 ms. An FMOD-backed `AudioClock` will replace this adapter in State 09 without changing the judgement engine.
 
+State 09 supplies that replacement through `FmodAudioPlayer` and `FmodSongClock`. A song manifest owns the stable song id, display metadata, original audio filename, and an explicit millisecond offset; the C++ code does not infer titles from files. Music lives below ignored `assets/local/`, while manifests remain versioned. The FMOD SDK path is a local CMake setting, and its runtime DLL is copied next to the executable only for local builds.
+
 The gameplay render order is:
 
 ```text

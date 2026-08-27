@@ -48,6 +48,7 @@ target_compile_features(pumpdx_scenes PUBLIC cxx_std_20)
 
 add_library(pumpdx_session
     src/game/content/SongCatalog.cpp
+    src/game/content/SongManifest.cpp
     src/game/session/PlaySession.cpp
 )
 
@@ -58,6 +59,31 @@ target_include_directories(pumpdx_session
 
 target_compile_features(pumpdx_session PUBLIC cxx_std_20)
 target_link_libraries(pumpdx_scenes PUBLIC pumpdx_session)
+
+set(PUMP_DX_FMOD_API_ROOT "C:/Program Files (x86)/FMOD SoundSystem/FMOD Studio API Windows/api/core" CACHE PATH "FMOD Core API root containing inc and lib directories")
+set(PUMP_DX_HAS_FMOD FALSE)
+if(EXISTS "${PUMP_DX_FMOD_API_ROOT}/inc/fmod.hpp" AND EXISTS "${PUMP_DX_FMOD_API_ROOT}/lib/x64/fmod_vc.lib")
+    set(PUMP_DX_HAS_FMOD TRUE)
+endif()
+
+add_library(pumpdx_audio
+    src/framework/audio/FmodAudioPlayer.cpp
+)
+
+target_include_directories(pumpdx_audio
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_compile_features(pumpdx_audio PUBLIC cxx_std_20)
+
+if(PUMP_DX_HAS_FMOD)
+    target_include_directories(pumpdx_audio PRIVATE "${PUMP_DX_FMOD_API_ROOT}/inc")
+    target_link_libraries(pumpdx_audio PRIVATE "${PUMP_DX_FMOD_API_ROOT}/lib/x64/fmod_vc.lib")
+    target_compile_definitions(pumpdx_audio PRIVATE PUMP_DX_HAS_FMOD=1)
+else()
+    message(WARNING "FMOD Core API was not found. The executable will use the DebugSongClock until PUMP_DX_FMOD_API_ROOT is configured.")
+endif()
 
 add_library(pumpdx_gameflow
     src/game/application/GameFlow.cpp
@@ -70,6 +96,9 @@ target_include_directories(pumpdx_gameflow
 
 target_compile_features(pumpdx_gameflow PUBLIC cxx_std_20)
 target_link_libraries(pumpdx_gameflow PUBLIC pumpdx_scenes pumpdx_session)
+target_compile_definitions(pumpdx_gameflow PRIVATE
+    PUMP_DX_DEFAULT_SONG_MANIFEST=L"${CMAKE_CURRENT_SOURCE_DIR}/assets/catalog/legacy-new-song-to-god.song.manifest"
+)
 
 if(MSVC)
     target_compile_options(pumpdx_scenes PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
@@ -94,6 +123,7 @@ target_link_libraries(pumpdx_session PUBLIC pumpdx_chart)
 
 add_library(pumpdx_gameplay
     src/game/gameplay/DebugSongClock.cpp
+    src/game/gameplay/FmodSongClock.cpp
     src/game/gameplay/GameplayRuntime.cpp
     src/game/gameplay/Judgement.cpp
     src/game/gameplay/ScoreState.cpp
@@ -105,7 +135,7 @@ target_include_directories(pumpdx_gameplay
 )
 
 target_compile_features(pumpdx_gameplay PUBLIC cxx_std_20)
-target_link_libraries(pumpdx_gameplay PUBLIC pumpdx_chart pumpdx_core)
+target_link_libraries(pumpdx_gameplay PUBLIC pumpdx_audio pumpdx_chart pumpdx_core)
 target_link_libraries(pumpdx_gameflow PUBLIC pumpdx_gameplay)
 
 if(MSVC)
@@ -139,14 +169,25 @@ target_compile_definitions(PumpDXRebuild PRIVATE
     PUMP_DX_DEFAULT_THEME_MANIFEST=L\"${CMAKE_CURRENT_SOURCE_DIR}/assets/themes/default/theme.json\"
 )
 
+if(PUMP_DX_HAS_FMOD)
+    add_custom_command(TARGET PumpDXRebuild POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${PUMP_DX_FMOD_API_ROOT}/lib/x64/fmod.dll"
+            "$<TARGET_FILE_DIR:PumpDXRebuild>/fmod.dll"
+        VERBATIM
+    )
+endif()
+
 if(MSVC)
     target_compile_options(pumpdx_core PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
     target_compile_options(pumpdx_session PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
+    target_compile_options(pumpdx_audio PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
     target_compile_options(pumpdx_gameflow PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
     target_compile_options(PumpDXRebuild PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
 else()
     target_compile_options(pumpdx_core PRIVATE -Wall -Wextra -Wpedantic)
     target_compile_options(pumpdx_session PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(pumpdx_audio PRIVATE -Wall -Wextra -Wpedantic)
     target_compile_options(pumpdx_gameflow PRIVATE -Wall -Wextra -Wpedantic)
     target_compile_options(PumpDXRebuild PRIVATE -Wall -Wextra -Wpedantic)
 endif()
@@ -273,4 +314,22 @@ if(BUILD_TESTING)
     endif()
 
     add_test(NAME PumpDXJudgementTests COMMAND PumpDXJudgementTests)
+
+    add_executable(PumpDXSongManifestTests
+        tests/SongManifestTests.cpp
+    )
+
+    target_link_libraries(PumpDXSongManifestTests PRIVATE pumpdx_session)
+    target_compile_features(PumpDXSongManifestTests PRIVATE cxx_std_20)
+    target_compile_definitions(PumpDXSongManifestTests PRIVATE
+        PUMP_DX_TEST_SONG_MANIFEST="${CMAKE_CURRENT_SOURCE_DIR}/assets/catalog/legacy-new-song-to-god.song.manifest"
+    )
+
+    if(MSVC)
+        target_compile_options(PumpDXSongManifestTests PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
+    else()
+        target_compile_options(PumpDXSongManifestTests PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME PumpDXSongManifestTests COMMAND PumpDXSongManifestTests)
 endif()
