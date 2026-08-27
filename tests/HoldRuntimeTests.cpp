@@ -141,6 +141,22 @@ void TestReleasedTailLeavesTheFieldAfterItsMissedEnd() {
         "A released tail must scroll out naturally after its missed end instead of remaining at the receptor.");
 }
 
+void TestExpiredHoldDoesNotLeaveAReceptorGhostWhenPressedAgain() {
+    auto clock = std::make_unique<MutableSongClock>();
+    auto* clockView = clock.get();
+    pumpdx::gameplay::GameplayRuntime runtime(MakeHoldChart(), std::move(clock));
+
+    clockView->SetSeconds(1.0);
+    runtime.SetPanelPressed(pumpdx::chart::PanelLane::Center, true);
+    runtime.SetPanelPressed(pumpdx::chart::PanelLane::Center, false);
+    clockView->SetSeconds(6.0);
+    runtime.Update();
+    runtime.SetPanelPressed(pumpdx::chart::PanelLane::Center, true);
+
+    Expect(runtime.BuildRenderItemsForCurrentTime().empty(),
+        "Pressing a lane after its hold has passed must not re-anchor a ghost at the receptor.");
+}
+
 } // namespace
 
 int main() {
@@ -148,6 +164,7 @@ int main() {
     TestReleaseMissesOnlyTheGapAndRepressResumes();
     TestLateBodyPressStartsFromTheNextAvailableTick();
     TestReleasedTailLeavesTheFieldAfterItsMissedEnd();
+    TestExpiredHoldDoesNotLeaveAReceptorGhostWhenPressedAgain();
     std::cout << "Hold runtime tests passed.\n";
     return EXIT_SUCCESS;
 }

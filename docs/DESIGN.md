@@ -189,6 +189,8 @@ State 16-1-1 establishes the consumed-body release invariant: once a hold has be
 
 State 16-1-2 completes the release view: at release, the remaining tail begins moving upward from the receptor at normal scroll speed while each later sustain point continues to emit Miss. Only that remaining segment moves; consumed history is never restored. Re-pressing attaches the then-remaining tail to the receptor again for continued holding. The tail leaves the field naturally after its end passes the receptor, including when the final sustain point was missed.
 
+State 16-1-3 closes the expired-hold visual lifecycle: a lane press may anchor only a caught hold that still has at least one unresolved sustain point and has not reached its end time. Pressing the same lane after every sustain point has already resolved must never recreate a receptor-bound hold remnant. This keeps independent later input from producing a visual ghost of an expired hold.
+
 State 16-2 repositions the 1P HUD using the supplied Pump It Up gameplay reference: the narrow five-lane field is left anchored at X=162–734, the receptor line is lifted to Y=152, and notes rise from the lower field into that top receptor band. The horizontal energy bar is aligned above it at X=188–680 / Y=20–46. Judgement appears directly below the receptors and combo below the judgement; song information and score move to the upper-right, leaving the surrounding BGA readable. This supersedes the centred, lower-receptor State 16 placement while keeping the same shared `GameplayLayout` timing/render contract.
 
 The gameplay render order is:

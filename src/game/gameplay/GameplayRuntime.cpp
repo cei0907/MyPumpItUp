@@ -96,8 +96,16 @@ std::vector<render::GameplayRenderItem> GameplayRuntime::BuildRenderItems(const 
         const auto hasConsumedHead = note.isHold
             && note.holdActivated
             && headY < render::layout::kReceptorY;
+        const auto hasRemainingHoldTick = note.isHold
+            && note.nextHoldTick < note.holdTickSeconds.size();
+        const auto isHoldBeingHeld = note.isHold
+            && note.holdActivated
+            && hasRemainingHoldTick
+            && songTimeSeconds >= note.startSeconds
+            && songTimeSeconds <= note.endSeconds
+            && pressedPanels_[static_cast<std::size_t>(note.lane)];
         const auto holdBodyStartY = hasConsumedHead
-            ? (pressedPanels_[static_cast<std::size_t>(note.lane)]
+            ? (isHoldBeingHeld
                 ? render::layout::kReceptorY
                 : ToScreenY(note.visualBodyStartSeconds, songTimeSeconds))
             : headY;
@@ -115,8 +123,8 @@ std::vector<render::GameplayRenderItem> GameplayRuntime::BuildRenderItems(const 
             .isHold = note.isHold,
             .isHoldActive = note.isHold
                 && note.holdActivated
-                && note.nextHoldTick < note.holdTickSeconds.size()
-                && pressedPanels_[static_cast<std::size_t>(note.lane)],
+                && hasRemainingHoldTick
+                && isHoldBeingHeld,
             .isHoldDamaged = note.isHold && note.holdHasMissedTick,
             .showHead = !hasConsumedHead,
         });
