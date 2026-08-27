@@ -198,10 +198,15 @@ void GameplayRuntime::UpdateHoldVisualStart(const chart::PanelLane lane, const d
 void GameplayRuntime::Apply(const JudgementEvent& event) noexcept {
     scoreState_.Apply(event);
     energyGauge_.Apply(event);
+    effectPool_.Trigger(event, SongTimeSeconds());
 }
 
 std::vector<render::GameplayRenderItem> GameplayRuntime::BuildRenderItemsForCurrentTime() const {
     return BuildRenderItems(SongTimeSeconds());
+}
+
+render::GameplayFeedback GameplayRuntime::BuildFeedbackForCurrentTime() const noexcept {
+    return effectPool_.Sample(SongTimeSeconds());
 }
 
 std::vector<GameplayRuntime::TimelineNote> GameplayRuntime::CompileTimeline(const chart::Chart& chart) {

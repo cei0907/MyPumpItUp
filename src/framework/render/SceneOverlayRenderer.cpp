@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <string>
 
 namespace pumpdx::render {
@@ -17,6 +18,11 @@ namespace {
 
 [[nodiscard]] D2D1_COLOR_F ToD2DColor(const std::array<float, 4>& color) {
     return {color[0], color[1], color[2], color[3]};
+}
+
+[[nodiscard]] D2D1_COLOR_F WithOpacity(D2D1_COLOR_F color, const float opacity) {
+    color.a *= (std::clamp)(opacity, 0.0F, 1.0F);
+    return color;
 }
 
 template <typename T>
@@ -375,6 +381,22 @@ void SceneOverlayRenderer::DrawGameplay(
     const auto clampedEnergy = (std::clamp)(energyPercent, 0.0F, 100.0F);
     const auto gaugeFillRight = layout::kGaugeLeft
         + (layout::kGaugeRight - layout::kGaugeLeft) * clampedEnergy / 100.0F;
+    const auto gaugeImpact = hud.feedback.gaugeImpact;
+    if (std::abs(gaugeImpact) > 0.01F) {
+        brush_->SetColor(WithOpacity(
+            gaugeImpact > 0.0F ? ToD2DColor(palette.accent) : D2D1::ColorF(0.92F, 0.18F, 0.16F, 1.0F),
+            0.12F + std::abs(gaugeImpact) * 0.28F));
+        target_->FillRoundedRectangle(
+            D2D1::RoundedRect(
+                D2D1::RectF(
+                    layout::kGaugeLeft - 6.0F,
+                    layout::kGaugeTop - 6.0F,
+                    layout::kGaugeRight + 6.0F,
+                    layout::kGaugeBottom + 6.0F),
+                13.0F,
+                13.0F),
+            brush_);
+    }
     brush_->SetColor(D2D1::ColorF(0.01F, 0.02F, 0.04F, 0.84F));
     target_->FillRoundedRectangle(
         D2D1::RoundedRect(
@@ -421,6 +443,14 @@ void SceneOverlayRenderer::DrawGameplay(
         brush_->SetColor(ToD2DColor(palette.detail));
         target_->DrawRectangle(D2D1::RectF(left, layout::kFieldTop, left + layout::kLaneWidth, layout::kFieldBottom), brush_, 1.0F);
 
+        const auto receptorImpact = hud.feedback.receptorImpact[lane];
+        if (std::abs(receptorImpact) > 0.01F) {
+            brush_->SetColor(WithOpacity(
+                receptorImpact > 0.0F ? ToD2DColor(palette.accent) : D2D1::ColorF(0.92F, 0.18F, 0.16F, 1.0F),
+                0.12F + std::abs(receptorImpact) * 0.34F));
+            const auto radius = 42.0F + std::abs(receptorImpact) * 24.0F;
+            target_->FillEllipse(D2D1::Ellipse(D2D1::Point2F(centerX, layout::kReceptorY), radius, radius), brush_);
+        }
         if (pressedPanels[lane]) {
             brush_->SetColor(D2D1::ColorF(0.12F, 0.85F, 1.0F, 0.18F));
             target_->FillRectangle(D2D1::RectF(left, layout::kReceptorY - 48.0F, left + layout::kLaneWidth, layout::kReceptorY + 48.0F), brush_);
@@ -484,15 +514,30 @@ void SceneOverlayRenderer::DrawGameplay(
     target_->PopAxisAlignedClip();
 
     headlineFormat_->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
-    brush_->SetColor(ToD2DColor(palette.heading));
+    const auto judgementBurst = hud.feedback.judgementBurst;
+    if (judgementBurst > 0.01F) {
+        brush_->SetColor(WithOpacity(ToD2DColor(palette.accent), judgementBurst * 0.34F));
+        const auto radius = 44.0F + judgementBurst * 42.0F;
+        target_->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(448.0F, 240.0F), radius * 1.55F, radius * 0.65F), brush_, 2.0F);
+    }
+    D2D1_MATRIX_3X2_F hudTransform{};
+    target_->GetTransform(&hudTransform);
+    const auto judgementScale = 1.0F + judgementBurst * 0.16F;
+    target_->SetTransform(hudTransform * D2D1::Matrix3x2F::Scale(
+        judgementScale, judgementScale, D2D1::Point2F(448.0F, 240.0F)));
+    brush_->SetColor(WithOpacity(ToD2DColor(palette.heading), 0.66F + judgementBurst * 0.34F));
     target_->DrawText(hud.judgement.data(), static_cast<UINT32>(hud.judgement.size()), headlineFormat_,
         D2D1::RectF(88.0F, 206.0F, 808.0F, 274.0F), brush_);
+    target_->SetTransform(hudTransform);
     brush_->SetColor(ToD2DColor(palette.instruction));
     target_->DrawText(L"COMBO", 5, instructionFormat_, D2D1::RectF(258.0F, 278.0F, 638.0F, 304.0F), brush_);
     const auto comboText = std::to_wstring(hud.combo);
+    target_->SetTransform(hudTransform * D2D1::Matrix3x2F::Scale(
+        hud.feedback.comboScale, hud.feedback.comboScale, D2D1::Point2F(448.0F, 334.0F)));
     brush_->SetColor(ToD2DColor(palette.accent));
     target_->DrawText(comboText.data(), static_cast<UINT32>(comboText.size()), headlineFormat_,
         D2D1::RectF(158.0F, 300.0F, 738.0F, 370.0F), brush_);
+    target_->SetTransform(hudTransform);
     headlineFormat_->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 
     brush_->SetColor(ToD2DColor(palette.instruction));

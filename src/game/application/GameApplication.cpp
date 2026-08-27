@@ -267,6 +267,7 @@ void GameApplication::RenderFrame() {
                 .combo = score.CurrentCombo(),
                 .maxCombo = score.MaxCombo(),
                 .holdTicks = score.HoldTicks(),
+                .feedback = gameplay->BuildFeedbackForCurrentTime(),
             },
             static_cast<float>(gameplay->Energy().Value()));
     } else {

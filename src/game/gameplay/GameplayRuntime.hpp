@@ -4,6 +4,7 @@
 #include "game/chart/Chart.hpp"
 #include "game/gameplay/Judgement.hpp"
 #include "game/gameplay/EnergyGauge.hpp"
+#include "game/gameplay/GameplayEffectPool.hpp"
 #include "game/gameplay/ScoreState.hpp"
 #include "game/gameplay/SongClock.hpp"
 
@@ -28,6 +29,7 @@ public:
     [[nodiscard]] session::GameplaySummary BuildResultSummary() const noexcept;
     [[nodiscard]] std::vector<render::GameplayRenderItem> BuildRenderItems(double songTimeSeconds) const;
     [[nodiscard]] std::vector<render::GameplayRenderItem> BuildRenderItemsForCurrentTime() const;
+    [[nodiscard]] render::GameplayFeedback BuildFeedbackForCurrentTime() const noexcept;
 
 private:
     struct TimelineNote final {
@@ -55,6 +57,7 @@ private:
     JudgementEngine judgementEngine_;
     ScoreState scoreState_;
     EnergyGauge energyGauge_;
+    GameplayEffectPool effectPool_;
     std::array<bool, 5> pressedPanels_{};
 };
 

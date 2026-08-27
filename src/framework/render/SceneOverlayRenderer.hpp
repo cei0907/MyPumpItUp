@@ -1,6 +1,7 @@
 #pragma once
 
 #include "framework/assets/ThemeManifest.hpp"
+#include "framework/render/GameplayFeedback.hpp"
 #include "framework/render/LogicalViewport.hpp"
 
 #include <d2d1.h>
@@ -39,6 +40,7 @@ struct GameplayHud final {
     std::uint32_t combo = 0;
     std::uint32_t maxCombo = 0;
     std::uint32_t holdTicks = 0;
+    GameplayFeedback feedback;
 };
 
 class SceneOverlayRenderer final {

@@ -128,6 +128,7 @@ add_library(pumpdx_gameplay
     src/game/gameplay/DebugSongClock.cpp
     src/game/gameplay/EnergyGauge.cpp
     src/game/gameplay/FmodSongClock.cpp
+    src/game/gameplay/GameplayEffectPool.cpp
     src/game/gameplay/GameplayRuntime.cpp
     src/game/gameplay/Judgement.cpp
     src/game/gameplay/ScoreState.cpp
@@ -333,6 +334,21 @@ if(BUILD_TESTING)
     endif()
 
     add_test(NAME PumpDXJudgementTests COMMAND PumpDXJudgementTests)
+
+    add_executable(PumpDXGameplayEffectTests
+        tests/GameplayEffectPoolTests.cpp
+    )
+
+    target_link_libraries(PumpDXGameplayEffectTests PRIVATE pumpdx_gameplay)
+    target_compile_features(PumpDXGameplayEffectTests PRIVATE cxx_std_20)
+
+    if(MSVC)
+        target_compile_options(PumpDXGameplayEffectTests PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
+    else()
+        target_compile_options(PumpDXGameplayEffectTests PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME PumpDXGameplayEffectTests COMMAND PumpDXGameplayEffectTests)
 
     add_executable(PumpDXSongManifestTests
         tests/SongManifestTests.cpp
