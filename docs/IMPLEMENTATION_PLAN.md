@@ -32,6 +32,7 @@ The `State NN` prefix is a small, reviewable Git work unit inside the numbered i
 - [x] Stage 03 / State 16 — PIU-inspired 1P field/HUD layout, judgement/combo feedback, and hold-state visuals
 - [x] Stage 03 / State 16-1 — Consumed-hold body clipping, release continuation, and successful-end cleanup
 - [x] Stage 03 / State 16-2 — PIU-reference 1P top-receptor HUD repositioning
+- [x] Stage 03 / State 16-1-1 — Prevent consumed hold segments from reappearing after release
 
 ## Phase 0 — Technology and development foundation
 

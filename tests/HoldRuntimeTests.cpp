@@ -91,9 +91,9 @@ void TestReleaseMissesOnlyTheGapAndRepressResumes() {
     const auto damagedItems = runtime.BuildRenderItemsForCurrentTime();
     Expect(damagedItems.size() == 1 && damagedItems.front().isHoldDamaged,
         "A missed sustain point must expose the damaged hold visual state.");
-    Expect(damagedItems.front().showHead
-            && damagedItems.front().holdBodyStartY < pumpdx::render::layout::kReceptorY,
-        "An unheld note body must continue above the receptor instead of being clipped.");
+    Expect(!damagedItems.front().showHead
+            && damagedItems.front().holdBodyStartY == pumpdx::render::layout::kReceptorY,
+        "A consumed hold body must remain clipped after release instead of reappearing above the receptor.");
     clockView->SetSeconds(3.2);
     runtime.SetPanelPressed(pumpdx::chart::PanelLane::Center, true);
     clockView->SetSeconds(5.0);

@@ -89,12 +89,13 @@ std::vector<render::GameplayRenderItem> GameplayRuntime::BuildRenderItems(const 
         }
         const auto headY = ToScreenY(note.startSeconds, songTimeSeconds);
         const auto tailY = note.isHold ? ToScreenY(note.endSeconds, songTimeSeconds) : headY;
-        const auto isCurrentlyHeld = note.isHold
+        const auto hasConsumedHead = note.isHold
             && note.holdActivated
-            && note.nextHoldTick < note.holdTickSeconds.size()
-            && pressedPanels_[static_cast<std::size_t>(note.lane)]
             && headY < render::layout::kReceptorY;
-        const auto holdBodyStartY = isCurrentlyHeld ? render::layout::kReceptorY : headY;
+        if (note.isHold && note.holdActivated && tailY <= render::layout::kReceptorY) {
+            continue;
+        }
+        const auto holdBodyStartY = hasConsumedHead ? render::layout::kReceptorY : headY;
         const auto top = std::min(holdBodyStartY, tailY);
         const auto bottom = std::max(holdBodyStartY, tailY);
         if (bottom < kVisibleTop || top > kVisibleBottom) {
@@ -109,7 +110,7 @@ std::vector<render::GameplayRenderItem> GameplayRuntime::BuildRenderItems(const 
             .isHold = note.isHold,
             .isHoldActive = note.isHold && note.holdActivated && note.nextHoldTick < note.holdTickSeconds.size(),
             .isHoldDamaged = note.isHold && note.holdHasMissedTick,
-            .showHead = !isCurrentlyHeld,
+            .showHead = !hasConsumedHead,
         });
     }
 
