@@ -37,11 +37,15 @@ void GameplayRuntime::SetPanelPressed(const chart::PanelLane lane, const bool pr
     const auto index = static_cast<std::size_t>(lane);
     const auto wasPressed = pressedPanels_[index];
     pressedPanels_[index] = pressed;
+    const auto songTimeSeconds = SongTimeSeconds();
     if (pressed && !wasPressed) {
-        if (const auto event = judgementEngine_.TryJudge(lane, SongTimeSeconds()); event.has_value()) {
+        if (const auto event = judgementEngine_.TryJudge(lane, songTimeSeconds); event.has_value()) {
             ResolveHeadJudgement(*event);
         }
-        TryActivateHoldFromBody(lane, SongTimeSeconds());
+        TryActivateHoldFromBody(lane, songTimeSeconds);
+        UpdateHoldVisualStart(lane, songTimeSeconds);
+    } else if (!pressed && wasPressed) {
+        UpdateHoldVisualStart(lane, songTimeSeconds);
     }
 }
 
@@ -92,10 +96,11 @@ std::vector<render::GameplayRenderItem> GameplayRuntime::BuildRenderItems(const 
         const auto hasConsumedHead = note.isHold
             && note.holdActivated
             && headY < render::layout::kReceptorY;
-        if (note.isHold && note.holdActivated && tailY <= render::layout::kReceptorY) {
-            continue;
-        }
-        const auto holdBodyStartY = hasConsumedHead ? render::layout::kReceptorY : headY;
+        const auto holdBodyStartY = hasConsumedHead
+            ? (pressedPanels_[static_cast<std::size_t>(note.lane)]
+                ? render::layout::kReceptorY
+                : ToScreenY(note.visualBodyStartSeconds, songTimeSeconds))
+            : headY;
         const auto top = std::min(holdBodyStartY, tailY);
         const auto bottom = std::max(holdBodyStartY, tailY);
         if (bottom < kVisibleTop || top > kVisibleBottom) {
@@ -108,7 +113,10 @@ std::vector<render::GameplayRenderItem> GameplayRuntime::BuildRenderItems(const 
             .holdBodyStartY = holdBodyStartY,
             .tailY = tailY,
             .isHold = note.isHold,
-            .isHoldActive = note.isHold && note.holdActivated && note.nextHoldTick < note.holdTickSeconds.size(),
+            .isHoldActive = note.isHold
+                && note.holdActivated
+                && note.nextHoldTick < note.holdTickSeconds.size()
+                && pressedPanels_[static_cast<std::size_t>(note.lane)],
             .isHoldDamaged = note.isHold && note.holdHasMissedTick,
             .showHead = !hasConsumedHead,
         });
@@ -170,6 +178,15 @@ void GameplayRuntime::TryActivateHoldFromBody(const chart::PanelLane lane, const
     }
 }
 
+void GameplayRuntime::UpdateHoldVisualStart(const chart::PanelLane lane, const double songTimeSeconds) noexcept {
+    for (auto& hold : timeline_) {
+        if (hold.isHold && hold.lane == lane && hold.holdActivated
+            && songTimeSeconds >= hold.startSeconds && songTimeSeconds <= hold.endSeconds) {
+            hold.visualBodyStartSeconds = songTimeSeconds;
+        }
+    }
+}
+
 void GameplayRuntime::Apply(const JudgementEvent& event) noexcept {
     scoreState_.Apply(event);
     energyGauge_.Apply(event);
@@ -192,6 +209,7 @@ std::vector<GameplayRuntime::TimelineNote> GameplayRuntime::CompileTimeline(cons
                     .lane = note.lane,
                     .startSeconds = seconds,
                     .endSeconds = seconds,
+                    .visualBodyStartSeconds = seconds,
                     .isHold = false,
                 });
             } else {
@@ -208,6 +226,7 @@ std::vector<GameplayRuntime::TimelineNote> GameplayRuntime::CompileTimeline(cons
                     .lane = note.lane,
                     .startSeconds = startSeconds,
                     .endSeconds = endSeconds,
+                    .visualBodyStartSeconds = startSeconds,
                     .isHold = true,
                     .holdTickSeconds = std::move(holdTickSeconds),
                 });

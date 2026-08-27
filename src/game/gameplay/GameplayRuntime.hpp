@@ -34,6 +34,7 @@ private:
         chart::PanelLane lane = chart::PanelLane::Center;
         double startSeconds = 0.0;
         double endSeconds = 0.0;
+        double visualBodyStartSeconds = 0.0;
         bool isHold = false;
         std::vector<double> holdTickSeconds;
         std::size_t nextHoldTick = 0;
@@ -46,6 +47,7 @@ private:
     void ResolveHeadJudgement(JudgementEvent event) noexcept;
     void ProcessHoldTicks(double songTimeSeconds);
     void TryActivateHoldFromBody(chart::PanelLane lane, double songTimeSeconds) noexcept;
+    void UpdateHoldVisualStart(chart::PanelLane lane, double songTimeSeconds) noexcept;
     void Apply(const JudgementEvent& event) noexcept;
 
     std::unique_ptr<SongClock> songClock_;

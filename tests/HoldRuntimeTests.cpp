@@ -92,8 +92,8 @@ void TestReleaseMissesOnlyTheGapAndRepressResumes() {
     Expect(damagedItems.size() == 1 && damagedItems.front().isHoldDamaged,
         "A missed sustain point must expose the damaged hold visual state.");
     Expect(!damagedItems.front().showHead
-            && damagedItems.front().holdBodyStartY == pumpdx::render::layout::kReceptorY,
-        "A consumed hold body must remain clipped after release instead of reappearing above the receptor.");
+            && damagedItems.front().holdBodyStartY < pumpdx::render::layout::kReceptorY,
+        "After release, only the unconsumed tail must keep rising above the receptor.");
     clockView->SetSeconds(3.2);
     runtime.SetPanelPressed(pumpdx::chart::PanelLane::Center, true);
     clockView->SetSeconds(5.0);
@@ -123,12 +123,31 @@ void TestLateBodyPressStartsFromTheNextAvailableTick() {
     Expect(runtime.BuildResultSummary().judgedNotes == 4, "Late catch must include the missed head and remaining sustain points.");
 }
 
+void TestReleasedTailLeavesTheFieldAfterItsMissedEnd() {
+    auto clock = std::make_unique<MutableSongClock>();
+    auto* clockView = clock.get();
+    pumpdx::gameplay::GameplayRuntime runtime(MakeHoldChart(), std::move(clock));
+
+    clockView->SetSeconds(1.0);
+    runtime.SetPanelPressed(pumpdx::chart::PanelLane::Center, true);
+    clockView->SetSeconds(2.0);
+    runtime.Update();
+    runtime.SetPanelPressed(pumpdx::chart::PanelLane::Center, false);
+    clockView->SetSeconds(6.0);
+    runtime.Update();
+
+    Expect(runtime.Score().HoldTicks() == 4, "Released holds must continue resolving every remaining tick as it rises.");
+    Expect(runtime.BuildRenderItemsForCurrentTime().empty(),
+        "A released tail must scroll out naturally after its missed end instead of remaining at the receptor.");
+}
+
 } // namespace
 
 int main() {
     TestCompletedHoldAwardsHeadAndEverySustainPoint();
     TestReleaseMissesOnlyTheGapAndRepressResumes();
     TestLateBodyPressStartsFromTheNextAvailableTick();
+    TestReleasedTailLeavesTheFieldAfterItsMissedEnd();
     std::cout << "Hold runtime tests passed.\n";
     return EXIT_SUCCESS;
 }
