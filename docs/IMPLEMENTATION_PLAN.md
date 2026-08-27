@@ -35,6 +35,7 @@ The `State NN` prefix is a small, reviewable Git work unit inside the numbered i
 - [x] Stage 03 / State 16-1-1 — Prevent consumed hold segments from reappearing after release
 - [x] Stage 03 / State 16-1-2 — Continue the unconsumed hold tail upward with Misses after release
 - [x] Stage 03 / State 16-1-3 — Prevent expired holds from re-anchoring as receptor ghosts
+- [x] Stage 03 / State 16-3 — Replace temporary note blocks with directional five-panel glyphs
 
 ## Phase 0 — Technology and development foundation
 

@@ -8,6 +8,7 @@
 #include <wincodec.h>
 
 #include <algorithm>
+#include <array>
 #include <string>
 
 namespace pumpdx::render {
@@ -23,6 +24,110 @@ void ReleaseCom(T*& object) {
     if (object != nullptr) {
         object->Release();
         object = nullptr;
+    }
+}
+
+[[nodiscard]] bool CreatePanelArrowGeometry(ID2D1Factory* const factory, ID2D1PathGeometry** const output) {
+    if (factory == nullptr || output == nullptr) {
+        return false;
+    }
+
+    ID2D1PathGeometry* geometry = nullptr;
+    if (FAILED(factory->CreatePathGeometry(&geometry))) {
+        return false;
+    }
+
+    ID2D1GeometrySink* sink = nullptr;
+    if (FAILED(geometry->Open(&sink))) {
+        ReleaseCom(geometry);
+        return false;
+    }
+
+    const std::array points{
+        D2D1::Point2F(0.0F, -44.0F),
+        D2D1::Point2F(42.0F, -2.0F),
+        D2D1::Point2F(19.0F, -2.0F),
+        D2D1::Point2F(19.0F, 42.0F),
+        D2D1::Point2F(-19.0F, 42.0F),
+        D2D1::Point2F(-19.0F, -2.0F),
+        D2D1::Point2F(-42.0F, -2.0F),
+    };
+    sink->BeginFigure(points.front(), D2D1_FIGURE_BEGIN_FILLED);
+    sink->AddLines(points.data() + 1, static_cast<UINT32>(points.size() - 1));
+    sink->EndFigure(D2D1_FIGURE_END_CLOSED);
+    const auto closeResult = sink->Close();
+    ReleaseCom(sink);
+    if (FAILED(closeResult)) {
+        ReleaseCom(geometry);
+        return false;
+    }
+
+    *output = geometry;
+    return true;
+}
+
+[[nodiscard]] float LaneArrowRotationDegrees(const std::uint8_t lane) {
+    constexpr std::array<float, 5> rotations{-135.0F, -45.0F, 0.0F, 45.0F, 135.0F};
+    return lane < rotations.size() ? rotations[lane] : 0.0F;
+}
+
+void DrawArrowGlyph(
+    ID2D1RenderTarget* const target,
+    ID2D1SolidColorBrush* const brush,
+    ID2D1PathGeometry* const geometry,
+    const D2D1_MATRIX_3X2_F& parentTransform,
+    const float centerX,
+    const float centerY,
+    const float scale,
+    const float rotationDegrees,
+    const D2D1_COLOR_F& fillColor,
+    const D2D1_COLOR_F& outlineColor,
+    const float outlineWidth) {
+    if (target == nullptr || brush == nullptr || geometry == nullptr) {
+        return;
+    }
+
+    target->SetTransform(
+        parentTransform
+        * D2D1::Matrix3x2F::Scale(scale, scale)
+        * D2D1::Matrix3x2F::Rotation(rotationDegrees)
+        * D2D1::Matrix3x2F::Translation(centerX, centerY));
+    brush->SetColor(fillColor);
+    target->FillGeometry(geometry, brush);
+    brush->SetColor(outlineColor);
+    target->DrawGeometry(geometry, brush, outlineWidth / scale);
+    target->SetTransform(parentTransform);
+}
+
+void DrawPanelGlyph(
+    ID2D1RenderTarget* const target,
+    ID2D1SolidColorBrush* const brush,
+    ID2D1PathGeometry* const geometry,
+    const D2D1_MATRIX_3X2_F& parentTransform,
+    const std::uint8_t lane,
+    const float centerX,
+    const float centerY,
+    const float scale,
+    const D2D1_COLOR_F& fillColor,
+    const D2D1_COLOR_F& outlineColor,
+    const float outlineWidth) {
+    if (lane != 2) {
+        DrawArrowGlyph(target, brush, geometry, parentTransform, centerX, centerY, scale,
+            LaneArrowRotationDegrees(lane), fillColor, outlineColor, outlineWidth);
+        return;
+    }
+
+    constexpr std::array<float, 4> rotations{0.0F, 90.0F, 180.0F, 270.0F};
+    const std::array<D2D1_POINT_2F, 4> offsets{
+        D2D1::Point2F(0.0F, -15.0F),
+        D2D1::Point2F(15.0F, 0.0F),
+        D2D1::Point2F(0.0F, 15.0F),
+        D2D1::Point2F(-15.0F, 0.0F),
+    };
+    for (std::size_t index = 0; index < rotations.size(); ++index) {
+        DrawArrowGlyph(target, brush, geometry, parentTransform,
+            centerX + offsets[index].x * scale, centerY + offsets[index].y * scale, scale * 0.40F,
+            rotations[index], fillColor, outlineColor, outlineWidth);
     }
 }
 
@@ -74,6 +179,11 @@ bool SceneOverlayRenderer::Initialize() {
         DWRITE_FONT_STRETCH_NORMAL, 22.0F, L"ko-KR", &instructionFormat_);
 
     if (FAILED(createHeadlineResult) || FAILED(createDetailResult) || FAILED(createInstructionResult)) {
+        Shutdown();
+        return false;
+    }
+
+    if (!CreatePanelArrowGeometry(factory_, &panelArrowGeometry_)) {
         Shutdown();
         return false;
     }
@@ -162,6 +272,7 @@ void SceneOverlayRenderer::ReleaseTarget() {
 
 void SceneOverlayRenderer::Shutdown() {
     ReleaseTarget();
+    ReleaseCom(panelArrowGeometry_);
     ReleaseCom(instructionFormat_);
     ReleaseCom(detailFormat_);
     ReleaseCom(headlineFormat_);
@@ -306,6 +417,7 @@ void SceneOverlayRenderer::DrawGameplay(
 
     for (std::uint8_t lane = 0; lane < 5; ++lane) {
         const auto left = layout::kFieldLeft + static_cast<float>(lane) * (layout::kLaneWidth + layout::kLaneGap);
+        const auto centerX = left + layout::kLaneWidth * 0.5F;
         brush_->SetColor(ToD2DColor(palette.detail));
         target_->DrawRectangle(D2D1::RectF(left, layout::kFieldTop, left + layout::kLaneWidth, layout::kFieldBottom), brush_, 1.0F);
 
@@ -313,20 +425,12 @@ void SceneOverlayRenderer::DrawGameplay(
             brush_->SetColor(D2D1::ColorF(0.12F, 0.85F, 1.0F, 0.18F));
             target_->FillRectangle(D2D1::RectF(left, layout::kReceptorY - 48.0F, left + layout::kLaneWidth, layout::kReceptorY + 48.0F), brush_);
         }
-        brush_->SetColor(pressedPanels[lane] ? ToD2DColor(palette.accent) : ToD2DColor(palette.panel));
-        target_->FillRoundedRectangle(
-            D2D1::RoundedRect(
-                D2D1::RectF(left + 14.0F, layout::kReceptorY - 25.0F, left + layout::kLaneWidth - 14.0F, layout::kReceptorY + 25.0F),
-                9.0F,
-                9.0F),
-            brush_);
-        brush_->SetColor(ToD2DColor(palette.heading));
-        target_->DrawRoundedRectangle(
-            D2D1::RoundedRect(
-                D2D1::RectF(left + 14.0F, layout::kReceptorY - 25.0F, left + layout::kLaneWidth - 14.0F, layout::kReceptorY + 25.0F),
-                9.0F,
-                9.0F),
-            brush_, 2.0F);
+        D2D1_MATRIX_3X2_F worldTransform{};
+        target_->GetTransform(&worldTransform);
+        DrawPanelGlyph(
+            target_, brush_, panelArrowGeometry_, worldTransform, lane, centerX, layout::kReceptorY, 0.76F,
+            pressedPanels[lane] ? ToD2DColor(palette.accent) : ToD2DColor(palette.panel),
+            ToD2DColor(palette.heading), 2.0F);
     }
 
     target_->PushAxisAlignedClip(
@@ -369,14 +473,12 @@ void SceneOverlayRenderer::DrawGameplay(
         }
 
         if (item.showHead) {
-            brush_->SetColor(item.isHold && item.isHoldActive ? ToD2DColor(palette.heading) : ToD2DColor(palette.accent));
-            target_->FillRoundedRectangle(
-                D2D1::RoundedRect(D2D1::RectF(centerX - 45.0F, item.headY - 18.0F, centerX + 45.0F, item.headY + 18.0F), 8.0F, 8.0F),
-                brush_);
-            brush_->SetColor(ToD2DColor(palette.heading));
-            target_->DrawRoundedRectangle(
-                D2D1::RoundedRect(D2D1::RectF(centerX - 45.0F, item.headY - 18.0F, centerX + 45.0F, item.headY + 18.0F), 8.0F, 8.0F),
-                brush_, 2.0F);
+            D2D1_MATRIX_3X2_F worldTransform{};
+            target_->GetTransform(&worldTransform);
+            DrawPanelGlyph(
+                target_, brush_, panelArrowGeometry_, worldTransform, item.lane, centerX, item.headY, 0.70F,
+                item.isHold && item.isHoldActive ? ToD2DColor(palette.heading) : ToD2DColor(palette.accent),
+                ToD2DColor(palette.heading), 2.0F);
         }
     }
     target_->PopAxisAlignedClip();

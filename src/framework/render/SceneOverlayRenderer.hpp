@@ -73,6 +73,7 @@ private:
     IDWriteTextFormat* detailFormat_ = nullptr;
     IDWriteTextFormat* instructionFormat_ = nullptr;
     IWICImagingFactory* wicFactory_ = nullptr;
+    ID2D1PathGeometry* panelArrowGeometry_ = nullptr;
     ID2D1Bitmap* gameplayBackground_ = nullptr;
     std::filesystem::path backgroundSourcePath_;
     bool backgroundLoadAttempted_ = false;
