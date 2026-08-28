@@ -1,6 +1,6 @@
 'use client';
 
-import { ChangeEvent, PointerEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { ChangeEvent, MouseEvent, PointerEvent, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ChartDocument, ChartNote, HoldNote, Lane, beatToNumber, chartEndBeat, cloneChart, lanes, parsePdxChart, serializePdxChart,
 } from './chart-format';
@@ -25,42 +25,74 @@ type FileHandleLike = {
   getFile: () => Promise<File>;
   createWritable: () => Promise<{ write: (content: string) => Promise<void>; close: () => Promise<void> }>;
 };
-type Tool = 'tap' | 'hold';
+type EditorMode = 'select' | 'input' | 'erase';
+type InputNoteType = 'tap' | 'hold';
 type TimelinePosition = { lane: Lane; beat: number };
 type DragState = { lane: Lane; startBeat: number; endBeat: number; resizeIndex: number | null };
 
-const laneColors = { SW: '#ff5c83', NW: '#ffb65f', C: '#8f7cff', NE: '#58d9c3', SE: '#5c9dff' };
+const laneColors = { SW: '#4f9bff', NW: '#ff5b67', C: '#ffd34d', NE: '#ff5b67', SE: '#4f9bff' };
+const laneGlyphs = { SW: '↙', NW: '↖', C: '✦', NE: '↗', SE: '↘' };
 const errorText = (error: unknown) => error instanceof Error ? error.message : 'Unable to read the chart.';
 const defaultTickCount = (startBeat: number, endBeat: number) => Math.max(1, Math.round((endBeat - startBeat) * 2));
+const gridOptions = [
+  { label: '1 beat', step: 1, denominator: 1 },
+  { label: '1/2 beat', step: 1 / 2, denominator: 2 },
+  { label: '1/3 beat · triplet', step: 1 / 3, denominator: 3 },
+  { label: '1/4 beat · 16th', step: 1 / 4, denominator: 4 },
+  { label: '1/6 beat · triplet 16th', step: 1 / 6, denominator: 6 },
+  { label: '1/8 beat', step: 1 / 8, denominator: 8 },
+  { label: '1/12 beat', step: 1 / 12, denominator: 12 },
+  { label: '1/16 beat', step: 1 / 16, denominator: 16 },
+];
+const greatestCommonDivisor = (left: number, right: number): number => right === 0 ? left : greatestCommonDivisor(right, left % right);
+const formatSnappedBeat = (beat: number, denominator: number) => {
+  const numerator = Math.round(beat * denominator);
+  const divisor = greatestCommonDivisor(Math.abs(numerator), denominator);
+  return denominator / divisor === 1 ? String(numerator / divisor) : `${numerator / divisor}/${denominator / divisor}`;
+};
 
 export default function Home() {
   const [chart, setChart] = useState<ChartDocument>(() => parsePdxChart(sampleChart));
   const [past, setPast] = useState<ChartDocument[]>([]);
   const [future, setFuture] = useState<ChartDocument[]>([]);
   const [selectedNote, setSelectedNote] = useState<number | null>(null);
-  const [tool, setTool] = useState<Tool>('tap');
+  const [editorMode, setEditorMode] = useState<EditorMode>('select');
+  const [inputNoteType, setInputNoteType] = useState<InputNoteType>('tap');
+  const [gridOptionIndex, setGridOptionIndex] = useState(3);
+  const [requestedTimelineEndBeat, setRequestedTimelineEndBeat] = useState(64);
   const [drag, setDrag] = useState<DragState | null>(null);
-  const [notice, setNotice] = useState('Tap tool selected. Open a converted local chart, or load the included hold-only demo.');
+  const [notice, setNotice] = useState('Select mode is active. Click a note to inspect or edit it; empty cells do not create notes.');
   const [fileName, setFileName] = useState('new-song-to-god-hold-playtest.pdxchart');
   const [fileHandle, setFileHandle] = useState<FileHandleLike | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const endBeat = useMemo(() => Math.ceil(chartEndBeat(chart) / 4) * 4 + 4, [chart]);
+  const chartRequiredEndBeat = useMemo(() => Math.ceil(chartEndBeat(chart) / 4) * 4 + 4, [chart]);
+  const endBeat = Math.max(chartRequiredEndBeat, requestedTimelineEndBeat);
   const pixelsPerBeat = 54;
   const laneWidth = 112;
   const canvasWidth = lanes.length * laneWidth;
   const canvasHeight = Math.max(720, endBeat * pixelsPerBeat + 44);
   const selected = selectedNote === null ? null : chart.notes[selectedNote] ?? null;
+  const grid = gridOptions[gridOptionIndex];
 
-  const commit = (next: ChartDocument, message: string) => {
+  const commit = (next: ChartDocument, message: string, nextSelection: number | null = null) => {
     setPast((entries) => [...entries.slice(-99), cloneChart(chart)]);
-    setFuture([]); setChart(next); setSelectedNote(null); setNotice(message);
+    setFuture([]); setChart(next); setSelectedNote(nextSelection); setNotice(message);
   };
   const replaceChart = (next: ChartDocument, message: string, name = fileName, handle: FileHandleLike | null = null) => {
     setPast([]); setFuture([]); setChart(next); setSelectedNote(null); setDrag(null); setFileName(name); setFileHandle(handle); setNotice(message);
   };
-  const setActiveTool = (nextTool: Tool) => {
-    setTool(nextTool); setDrag(null); setNotice(nextTool === 'tap' ? 'Tap tool selected.' : 'Hold tool selected. Drag across one lane to create a hold.');
+  const setActiveMode = (nextMode: EditorMode) => {
+    setEditorMode(nextMode); setDrag(null);
+    setNotice(nextMode === 'select'
+      ? 'Select mode is active. Click a note to inspect or edit it; empty cells do not create notes.'
+      : nextMode === 'erase'
+        ? 'Delete mode is active. Click a note to remove it; empty cells do not change the chart.'
+        : `${inputNoteType === 'tap' ? 'Tap' : 'Hold'} input is active. Click or drag only in an empty lane span.`);
+  };
+  const setActiveInputNoteType = (nextType: InputNoteType) => {
+    setInputNoteType(nextType); setEditorMode('input'); setDrag(null);
+    setNotice(nextType === 'tap' ? 'Tap input is active. Click an empty grid cell to add a tap.' : 'Hold input is active. Drag downward across one empty lane span.');
   };
 
   const noteBounds = (note: ChartNote) => {
@@ -82,7 +114,8 @@ export default function Home() {
     if (y < 44) return null;
     const laneIndex = Math.floor(x / laneWidth);
     if (laneIndex < 0 || laneIndex >= lanes.length) return null;
-    return { lane: lanes[laneIndex], beat: Math.max(0, Math.round((y - 44) / pixelsPerBeat)) };
+    const rawBeat = Math.max(0, (y - 44) / pixelsPerBeat);
+    return { lane: lanes[laneIndex], beat: Math.round(rawBeat / grid.step) * grid.step };
   };
   const hitNote = (position: TimelinePosition) => {
     const laneIndex = lanes.indexOf(position.lane);
@@ -109,20 +142,25 @@ export default function Home() {
     lanes.forEach((lane, laneIndex) => {
       const x = laneIndex * laneWidth;
       context.fillStyle = laneIndex % 2 === 0 ? '#161b31' : '#13182b'; context.fillRect(x, 44, laneWidth, canvas.height - 44);
-      context.fillStyle = laneColors[lane]; context.font = '700 16px Arial'; context.fillText(lane, x + 40, 28);
+      context.fillStyle = laneColors[lane]; context.font = '700 26px Arial'; context.fillText(laneGlyphs[lane], x + 41, 29);
       context.strokeStyle = '#303854'; context.beginPath(); context.moveTo(x + laneWidth, 0); context.lineTo(x + laneWidth, canvas.height); context.stroke();
     });
-    for (let beat = 0; beat <= endBeat; beat += 1) {
+    const lineCount = Math.round(endBeat / grid.step);
+    for (let lineIndex = 0; lineIndex <= lineCount; lineIndex += 1) {
+      const beat = lineIndex * grid.step;
       const y = 44 + beat * pixelsPerBeat;
-      context.strokeStyle = beat % 4 === 0 ? '#596384' : '#242b46'; context.lineWidth = beat % 4 === 0 ? 2 : 1;
+      const wholeBeat = Math.abs(beat - Math.round(beat)) < 0.00001;
+      const measure = wholeBeat && Math.round(beat) % 4 === 0;
+      context.strokeStyle = measure ? '#596384' : wholeBeat ? '#303956' : '#242b46'; context.lineWidth = measure ? 2 : 1;
       context.beginPath(); context.moveTo(0, y); context.lineTo(canvas.width, y); context.stroke();
-      if (beat % 4 === 0) { context.fillStyle = '#9da9cd'; context.font = '600 11px Arial'; context.fillText(`M${beat / 4 + 1}`, 6, y + 14); }
+      if (measure) { context.fillStyle = '#9da9cd'; context.font = '600 11px Arial'; context.fillText(`M${Math.round(beat) / 4 + 1}`, 6, y + 14); }
     }
     const drawNote = (note: ChartNote, index: number, preview = false) => {
       const { x, width, top, height } = noteBounds(note); const color = laneColors[note.lane];
       context.fillStyle = preview ? `${color}22` : `${color}33`; context.fillRect(x, top, width, height);
       context.strokeStyle = selectedNote === index ? '#ffffff' : color; context.lineWidth = selectedNote === index ? 3 : 2; context.strokeRect(x, top, width, height);
       context.fillStyle = color; context.fillRect(x, top, width, Math.min(26, height));
+      context.fillStyle = '#101426'; context.font = '700 22px Arial'; context.fillText(laneGlyphs[note.lane], x + 21, top + 21);
       if (note.type === 'hold') { context.fillStyle = '#dce5ff'; context.font = '600 11px Arial'; context.fillText(`${note.tickCount}`, x + 26, top + 47); }
     };
     chart.notes.forEach((note, index) => drawNote(note, index));
@@ -130,27 +168,34 @@ export default function Home() {
       const preview: HoldNote = { type: 'hold', lane: drag.lane, startBeat: String(drag.startBeat), endBeat: String(drag.endBeat), tickCount: defaultTickCount(drag.startBeat, drag.endBeat) };
       drawNote(preview, -1, true);
     }
-  }, [canvasHeight, canvasWidth, chart, drag, endBeat, selectedNote]);
+  }, [canvasHeight, canvasWidth, chart, drag, endBeat, grid, selectedNote]);
 
   const onPointerDown = (event: PointerEvent<HTMLCanvasElement>) => {
     const position = timelinePosition(event); if (!position) return;
     const hitIndex = hitNote(position);
     if (hitIndex !== null) {
+      if (editorMode === 'erase') {
+        commit({ ...chart, notes: chart.notes.filter((_, index) => index !== hitIndex) }, 'Deleted note.');
+        return;
+      }
       const hit = chart.notes[hitIndex]; setSelectedNote(hitIndex);
-      if (tool === 'hold' && hit.type === 'hold' && position.beat >= beatToNumber(hit.endBeat) - 1) {
+      if (editorMode === 'select' && hit.type === 'hold' && position.beat >= beatToNumber(hit.endBeat) - grid.step) {
         event.currentTarget.setPointerCapture(event.pointerId);
         setDrag({ lane: hit.lane, startBeat: beatToNumber(hit.startBeat), endBeat: beatToNumber(hit.endBeat), resizeIndex: hitIndex });
         setNotice('Drag the end of the selected hold to resize it.');
-      } else setNotice(`Selected ${hit.type} note on ${hit.lane}.`);
+      } else setNotice(editorMode === 'select' ? `Selected ${hit.type} note on ${hit.lane}.` : 'This cell already has a note. Switch to Select mode to edit it.');
       return;
     }
-    if (tool === 'tap') {
-      commit({ ...chart, notes: [...chart.notes, { type: 'tap', lane: position.lane, beat: String(position.beat) }] }, `Added ${position.lane} tap at beat ${position.beat}.`);
+    if (editorMode === 'select') { setSelectedNote(null); setNotice('No note at this position. Switch to Input to create a note.'); return; }
+    if (editorMode === 'erase') { setSelectedNote(null); setNotice('No note at this position.'); return; }
+    if (inputNoteType === 'tap') {
+      const beat = formatSnappedBeat(position.beat, grid.denominator);
+      commit({ ...chart, notes: [...chart.notes, { type: 'tap', lane: position.lane, beat }] }, `Added ${position.lane} tap at beat ${beat}.`);
       return;
     }
     event.currentTarget.setPointerCapture(event.pointerId);
     setDrag({ lane: position.lane, startBeat: position.beat, endBeat: position.beat + 1, resizeIndex: null });
-    setNotice('Drag right to choose the hold end.');
+    setNotice('Drag downward to choose the hold end.');
   };
   const onPointerMove = (event: PointerEvent<HTMLCanvasElement>) => {
     if (!drag) return;
@@ -160,7 +205,7 @@ export default function Home() {
   const onPointerUp = (event: PointerEvent<HTMLCanvasElement>) => {
     if (!drag) return;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
-    const candidate: HoldNote = { type: 'hold', lane: drag.lane, startBeat: String(drag.startBeat), endBeat: String(drag.endBeat), tickCount: defaultTickCount(drag.startBeat, drag.endBeat) };
+    const candidate: HoldNote = { type: 'hold', lane: drag.lane, startBeat: formatSnappedBeat(drag.startBeat, grid.denominator), endBeat: formatSnappedBeat(drag.endBeat, grid.denominator), tickCount: defaultTickCount(drag.startBeat, drag.endBeat) };
     const ignoredIndex = drag.resizeIndex;
     setDrag(null);
     if (collides(candidate, ignoredIndex)) { setNotice('Hold overlaps another event in the same lane. Choose an empty range.'); return; }
@@ -168,16 +213,30 @@ export default function Home() {
       commit({ ...chart, notes: chart.notes.map((note, index) => index === ignoredIndex ? candidate : note) }, `Resized ${candidate.lane} hold to beat ${candidate.endBeat}.`);
     } else commit({ ...chart, notes: [...chart.notes, candidate] }, `Added ${candidate.lane} hold from beat ${candidate.startBeat} to ${candidate.endBeat}.`);
   };
+  const onContextMenu = (event: MouseEvent<HTMLCanvasElement>) => {
+    event.preventDefault();
+    const position = timelinePosition(event as unknown as PointerEvent<HTMLCanvasElement>); if (!position) return;
+    const hitIndex = hitNote(position);
+    if (hitIndex === null) { setNotice('No note at this position.'); return; }
+    commit({ ...chart, notes: chart.notes.filter((_, index) => index !== hitIndex) }, 'Deleted note with the secondary click.');
+  };
 
   const undo = () => { const previous = past.at(-1); if (!previous) { setNotice('Nothing to undo.'); return; } setPast((entries) => entries.slice(0, -1)); setFuture((entries) => [cloneChart(chart), ...entries]); setChart(previous); setSelectedNote(null); setNotice('Undid the last edit.'); };
   const redo = () => { const next = future[0]; if (!next) { setNotice('Nothing to redo.'); return; } setFuture((entries) => entries.slice(1)); setPast((entries) => [...entries, cloneChart(chart)]); setChart(next); setSelectedNote(null); setNotice('Redid the edit.'); };
   const removeSelected = () => { if (selectedNote === null) { setNotice('Select a note before removing it.'); return; } commit({ ...chart, notes: chart.notes.filter((_, index) => index !== selectedNote) }, 'Selected note removed.'); };
-  const updateSelectedHold = (field: 'startBeat' | 'endBeat' | 'tickCount', value: string) => {
-    if (selectedNote === null || selected?.type !== 'hold') return;
-    const changed = { ...selected, [field]: field === 'tickCount' ? Math.max(1, Number(value) || 1) : value } as HoldNote;
-    if (beatToNumber(changed.endBeat) <= beatToNumber(changed.startBeat)) { setNotice('A hold end must be after its start.'); return; }
-    if (collides(changed, selectedNote)) { setNotice('Hold overlaps another event in the same lane.'); return; }
-    commit({ ...chart, notes: chart.notes.map((note, index) => index === selectedNote ? changed : note) }, 'Updated selected hold.');
+  const updateSelectedNote = (field: 'lane' | 'beat' | 'startBeat' | 'endBeat' | 'tickCount', value: string) => {
+    if (selectedNote === null || selected === null) return;
+    const changed = { ...selected, [field]: field === 'tickCount' ? Math.max(1, Number(value) || 1) : value } as ChartNote;
+    const startBeat = beatToNumber(changed.type === 'tap' ? changed.beat : changed.startBeat);
+    const endBeat = changed.type === 'tap' ? startBeat : beatToNumber(changed.endBeat);
+    if (!Number.isFinite(startBeat) || !Number.isFinite(endBeat) || startBeat < 0) { setNotice('Beat must be zero or later and use a number or fraction.'); return; }
+    if (changed.type === 'hold' && endBeat <= startBeat) { setNotice('A hold end must be after its start.'); return; }
+    if (changed.type === 'hold' && collides(changed, selectedNote)) { setNotice('Hold overlaps another event in the same lane.'); return; }
+    if (changed.type === 'tap') {
+      if (chart.notes.some((note, index) => index !== selectedNote && note.type === 'hold' && note.lane === changed.lane
+        && beatToNumber(note.startBeat) <= startBeat && startBeat <= beatToNumber(note.endBeat))) { setNotice('Tap overlaps a hold in the same lane.'); return; }
+    }
+    commit({ ...chart, notes: chart.notes.map((note, index) => index === selectedNote ? changed : note) }, 'Updated selected note.', selectedNote);
   };
   const loadText = (text: string, name: string, handle: FileHandleLike | null = null) => { try { replaceChart(parsePdxChart(text), `Loaded ${name}.`, name, handle); } catch (error) { setNotice(errorText(error)); } };
   const openChart = async () => {
@@ -193,15 +252,33 @@ export default function Home() {
       const url = URL.createObjectURL(new Blob([content], { type: 'text/plain;charset=utf-8' })); const anchor = document.createElement('a'); anchor.href = url; anchor.download = fileName.endsWith('.pdxchart') ? fileName : `${fileName}.pdxchart`; anchor.click(); URL.revokeObjectURL(url); setNotice('Downloaded the compatible .pdxchart file. Edge can save directly into a selected file.');
     } catch (error) { setNotice(errorText(error)); }
   };
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement || event.target instanceof HTMLTextAreaElement) return;
+      const key = event.key.toLowerCase();
+      if ((event.ctrlKey || event.metaKey) && key === 'z') { event.preventDefault(); undo(); return; }
+      if ((event.ctrlKey || event.metaKey) && key === 'y') { event.preventDefault(); redo(); return; }
+      if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); removeSelected(); return; }
+      if (key === 'v') { setActiveMode('select'); return; }
+      if (key === 'i') { setActiveMode('input'); return; }
+      if (key === 'x') { setActiveMode('erase'); return; }
+      if (event.key === '1') { setActiveInputNoteType('tap'); return; }
+      if (event.key === '2') setActiveInputNoteType('hold');
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [past, future, selectedNote, chart, inputNoteType]);
 
   return <main className="editor-shell">
     <header className="topbar"><div><p className="eyebrow">PUMPDX / STAGE 04</p><h1>Chart Editor</h1></div><div className="topbar-actions"><button className="quiet-button" onClick={() => loadText(sampleChart, 'new-song-to-god-hold-playtest.pdxchart')}>Load hold demo</button><button className="quiet-button" onClick={openChart}>Open .pdxchart</button><button className="primary-button" onClick={saveChart}>Save chart</button><input ref={inputRef} className="hidden-input" type="file" accept=".pdxchart,text/plain" onChange={onInputFile} /></div></header>
     <section className="editor-grid"><aside className="inspector">
       <section className="panel"><p className="panel-kicker">Chart metadata</p><label>Chart ID<input value={chart.id} onChange={(event) => setChart((current) => ({ ...current, id: event.target.value }))} /></label><label>Initial BPM<input type="number" min="1" value={chart.tempo[0]?.bpm ?? 120} onChange={(event) => { const bpm = Number(event.target.value); if (bpm > 0) setChart((current) => ({ ...current, tempo: [{ ...current.tempo[0], bpm }] })); }} /></label><p className="hint">State 22 keeps one initial BPM. Tempo changes arrive with the advanced timing state.</p></section>
-      <section className="panel"><p className="panel-kicker">Note tool</p><div className="tool-row"><button className={tool === 'tap' ? 'tool-button active' : 'tool-button'} onClick={() => setActiveTool('tap')}>Tap</button><button className={tool === 'hold' ? 'tool-button active' : 'tool-button'} onClick={() => setActiveTool('hold')}>Hold</button></div><p className="hint">Hold: drag downward in one lane. Drag a selected hold’s lower tail to resize it.</p></section>
-      {selected?.type === 'hold' && <section className="panel"><p className="panel-kicker">Selected hold · {selected.lane}</p><label>Start beat<input value={selected.startBeat} onChange={(event) => updateSelectedHold('startBeat', event.target.value)} /></label><label>End beat<input value={selected.endBeat} onChange={(event) => updateSelectedHold('endBeat', event.target.value)} /></label><label>Tick count<input type="number" min="1" value={selected.tickCount} onChange={(event) => updateSelectedHold('tickCount', event.target.value)} /></label></section>}
+      <section className="panel"><p className="panel-kicker">Editor mode</p><div className="tool-row mode-row"><button className={editorMode === 'select' ? 'tool-button active' : 'tool-button'} onClick={() => setActiveMode('select')}>Select</button><button className={editorMode === 'input' ? 'tool-button active' : 'tool-button'} onClick={() => setActiveMode('input')}>Input</button><button className={editorMode === 'erase' ? 'tool-button danger-active' : 'tool-button'} onClick={() => setActiveMode('erase')}>Delete</button></div><p className="hint">Select never adds a note. Input creates notes only in empty cells. Delete removes the clicked note.</p></section>
+      <section className="panel"><p className="panel-kicker">Input settings</p><label>Note type<select value={inputNoteType} onChange={(event) => setActiveInputNoteType(event.target.value as InputNoteType)}><option value="tap">Tap note</option><option value="hold">Long note</option></select></label><label>Grid snap<select value={gridOptionIndex} onChange={(event) => { const index = Number(event.target.value); setGridOptionIndex(index); setNotice(`Grid snap changed to ${gridOptions[index].label}.`); }}>{gridOptions.map((option, index) => <option key={option.label} value={index}>{option.label}</option>)}</select></label><p className="hint">Choose the grid first. 1/3 and 1/6 keep triplet beats as exact fractions.</p></section>
+      <section className="panel"><p className="panel-kicker">Timeline length</p><label>End beat<input type="number" min={chartRequiredEndBeat} step="4" value={endBeat} onChange={(event) => { const value = Number(event.target.value); if (Number.isFinite(value)) setRequestedTimelineEndBeat(Math.max(chartRequiredEndBeat, Math.ceil(value / 4) * 4)); }} /></label><button className="quiet-button full-button" onClick={() => { setRequestedTimelineEndBeat(endBeat + 16); setNotice(`Timeline extended to beat ${endBeat + 16}.`); }}>Add 16 beats</button><p className="hint">The chart grows automatically for new notes. Use this to reserve more empty timeline before input.</p></section>
+      {selected && <section className="panel"><p className="panel-kicker">Selected {selected.type} note</p><label>Panel<select value={selected.lane} onChange={(event) => updateSelectedNote('lane', event.target.value)}>{lanes.map((lane) => <option key={lane} value={lane}>{lane}</option>)}</select></label>{selected.type === 'tap' ? <label>Beat<input value={selected.beat} onChange={(event) => updateSelectedNote('beat', event.target.value)} /></label> : <><label>Start beat<input value={selected.startBeat} onChange={(event) => updateSelectedNote('startBeat', event.target.value)} /></label><label>End beat<input value={selected.endBeat} onChange={(event) => updateSelectedNote('endBeat', event.target.value)} /></label><label>Tick count<input type="number" min="1" value={selected.tickCount} onChange={(event) => updateSelectedNote('tickCount', event.target.value)} /></label></>}<p className="hint">Panel is a fixed choice; beats accept integers, fractions, and mixed fractions.</p></section>}
       <section className="panel"><p className="panel-kicker">Edit history</p><div className="button-row"><button className="quiet-button" onClick={undo} disabled={past.length === 0}>Undo</button><button className="quiet-button" onClick={redo} disabled={future.length === 0}>Redo</button></div><button className="danger-button" onClick={removeSelected}>Remove selected note</button></section>
       <section className="panel status-panel" aria-live="polite"><p className="panel-kicker">Editor status</p><p>{notice}</p></section>
-    </aside><section className="workspace"><div className="workspace-heading"><div><p className="panel-kicker">5-panel vertical timeline · 1 beat snap</p><h2>{fileName}</h2></div><span>{chart.notes.length} events</span></div><div className="timeline-frame"><canvas ref={canvasRef} width={canvasWidth} height={canvasHeight} aria-label="Five lane vertical chart timeline. Use the selected tool to create or edit notes." onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} /></div><div className="timeline-footer"><span>{tool === 'tap' ? 'Click an empty lane cell to add a tap note.' : 'Drag downward in an empty lane span to add a long note.'}</span><span>Holds use 2 ticks per beat by default; adjust the selected hold when needed.</span></div></section></section>
+    </aside><section className="workspace"><div className="workspace-heading"><div><p className="panel-kicker">5-panel vertical timeline · {grid.label} snap</p><h2>{fileName}</h2></div><span>{chart.notes.length} events · ends at beat {endBeat}</span></div><div className="timeline-frame"><canvas className={editorMode === 'select' ? 'select-cursor' : editorMode === 'erase' ? 'erase-cursor' : 'input-cursor'} ref={canvasRef} width={canvasWidth} height={canvasHeight} aria-label="Five lane vertical chart timeline. Select mode inspects notes, Input mode creates notes, and Delete mode removes notes." onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onContextMenu={onContextMenu} /></div><div className="timeline-footer"><span>{editorMode === 'select' ? 'Select: click a note to inspect it. Empty cells are safe.' : editorMode === 'erase' ? 'Delete: click a note to remove it. Empty cells are safe.' : inputNoteType === 'tap' ? 'Input: click an empty lane cell to add a tap note.' : 'Input: drag downward in an empty lane span to add a long note.'}</span><span>Shortcuts: V Select · I Input · X Delete · 1 Tap · 2 Hold · Del Remove · Ctrl+Z/Y Undo/Redo</span></div></section></section>
   </main>;
 }

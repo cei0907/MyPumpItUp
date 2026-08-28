@@ -17,6 +17,10 @@ Open the local address shown by the command. In State 21 it can:
 - show its five lanes and existing tap/hold events;
 - add, select, remove, undo, and redo integer-beat tap notes;
 - create long notes by dragging downward in a single lane, resize a selected long-note tail, and edit its tick count;
+- use DAW-style **Select**, **Input**, and **Delete** modes; secondary-click and the Delete key also remove a note quickly;
+- choose fixed values such as note type, panel lane, and grid snap from lists; type only chart ids, beats, BPM, and tick counts;
+- snap new notes to integer, half, triplet, sixteenth, and finer exact fractional beat grids;
+- extend the vertical timeline in advance, or let later notes extend it automatically; lane arrows use red upper, blue lower, and yellow centre identities.
 - edit chart id and initial BPM;
 - write the same `.pdxchart` format accepted by `NativeChartLoader`.
 
