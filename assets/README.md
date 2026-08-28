@@ -11,7 +11,7 @@ The tracked manifests in `assets/catalog/` describe the four songs that were reg
 - `music/Africa.mp3`, `music/FlyingDock.mp3`, `music/NewSongToGod.mp3`, `music/YouAreGood.mp3` to `assets/local/songs/legacy/`
 - `step/Africa_16.stp`, `step/FlyingDock_3.stp`, `step/FlyingDock_5.stp`, `step/NewSongToGod_10.stp`, `step/YouAreGood_14.stp` to `assets/local/charts/legacy/`
 
-Run `PumpDXChartConvert` after building to generate the local `assets/local/charts/converted/` `.pdxchart` files. The game catalog uses those converted files. `NewSongToGod_10.pdxchart` merges its original taps with the versioned hold-playtest overlay during conversion, so its runtime chart is now one editable source file.
+Run `PumpDXChartConvert` after building to generate the local `assets/local/charts/converted/` `.pdxchart` files. The game catalog uses those converted files. A normal conversion preserves the legacy chart exactly: because `.stp` supports taps only, `NewSongToGod_10.pdxchart` contains no long notes. The separate tracked hold-playtest chart is an optional authoring sample, not part of the converted legacy chart.
 
 The catalog scans every `*.song.manifest` file, groups entries with the same `id` as difficulty choices, and never commits those local media files.
 
