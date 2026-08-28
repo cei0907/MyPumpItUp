@@ -126,6 +126,12 @@ SongManifest SongManifest::Load(const std::filesystem::path& manifestPath) {
                 ? std::filesystem::path{}
                 : (manifestPath.parent_path() / bgaPath).lexically_normal();
         }(),
+        .videoBgaFilePath = [&manifestPath, &values] {
+            const auto bgaPath = Optional(values, "videoBgaPath");
+            return bgaPath.empty()
+                ? std::filesystem::path{}
+                : (manifestPath.parent_path() / bgaPath).lexically_normal();
+        }(),
         .audioOffsetSeconds = offsetMilliseconds / 1000.0,
         .legacyStartPosition = legacyStartPosition,
     };

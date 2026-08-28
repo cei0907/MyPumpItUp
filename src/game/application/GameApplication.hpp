@@ -3,6 +3,7 @@
 #include "framework/assets/ResourceCache.hpp"
 #include "framework/render/LogicalViewport.hpp"
 #include "framework/render/SceneOverlayRenderer.hpp"
+#include "framework/video/MediaFoundationBgaPlayer.hpp"
 #include "game/application/GameFlow.hpp"
 
 #include <Windows.h>
@@ -50,6 +51,7 @@ private:
     core::ViewportRect logicalViewport_{};
     assets::ResourceCache resourceCache_{};
     render::SceneOverlayRenderer sceneOverlayRenderer_{};
+    video::MediaFoundationBgaPlayer bgaVideoPlayer_{};
     GameFlow gameFlow_{};
 };
 

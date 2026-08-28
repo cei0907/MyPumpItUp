@@ -21,6 +21,7 @@ add_library(pumpdx_core
     src/framework/assets/ThemeManifest.cpp
     src/framework/render/LogicalViewport.cpp
     src/framework/render/SceneOverlayRenderer.cpp
+    src/framework/video/MediaFoundationBgaPlayer.cpp
 )
 
 target_include_directories(pumpdx_core
@@ -30,7 +31,7 @@ target_include_directories(pumpdx_core
 
 target_compile_features(pumpdx_core PUBLIC cxx_std_20)
 target_compile_definitions(pumpdx_core PUBLIC NOMINMAX)
-target_link_libraries(pumpdx_core PUBLIC windowscodecs ole32)
+target_link_libraries(pumpdx_core PUBLIC windowscodecs ole32 mfplat mfreadwrite mfuuid)
 
 add_library(pumpdx_scenes
     src/game/scenes/SceneManager.cpp
@@ -214,6 +215,21 @@ if(BUILD_TESTING)
     endif()
 
     add_test(NAME PumpDXCoreTests COMMAND PumpDXCoreTests)
+
+    add_executable(PumpDXBgaVideoTests
+        tests/BgaVideoPlayerTests.cpp
+    )
+
+    target_link_libraries(PumpDXBgaVideoTests PRIVATE pumpdx_core)
+    target_compile_features(PumpDXBgaVideoTests PRIVATE cxx_std_20)
+
+    if(MSVC)
+        target_compile_options(PumpDXBgaVideoTests PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
+    else()
+        target_compile_options(PumpDXBgaVideoTests PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME PumpDXBgaVideoTests COMMAND PumpDXBgaVideoTests)
 
     add_executable(PumpDXThemeTests
         tests/ThemeManifestTests.cpp

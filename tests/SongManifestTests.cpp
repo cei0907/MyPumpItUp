@@ -23,6 +23,7 @@ void TestManifestSeparatesDisplayMetadataFromAudioFileName() {
     Expect(manifest.chartFilePath.filename() == "NewSongToGod_10.stp", "Chart file paths must also come from the manifest.");
     Expect(manifest.holdOverlayFilePath.filename() == "new-song-to-god-hold-playtest.pdxchart", "Hold overlays must remain explicit manifest data.");
     Expect(manifest.staticBgaFilePath.filename() == "legacy-static-fallback.png", "Static BGA paths must stay optional manifest data.");
+    Expect(manifest.videoBgaFilePath.empty(), "A missing video BGA path must preserve static BGA fallback behaviour.");
     Expect(manifest.legacyStartPosition == 1052, "Legacy visual lead-in must remain explicit metadata.");
     Expect(manifest.audioOffsetSeconds == 0.0, "Audio offset must parse as seconds.");
 }

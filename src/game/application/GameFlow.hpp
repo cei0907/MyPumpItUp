@@ -29,6 +29,7 @@ public:
     [[nodiscard]] const gameplay::GameplayRuntime* ActiveGameplay() const noexcept;
     [[nodiscard]] bool IsUsingAudioClock() const noexcept;
     [[nodiscard]] const std::filesystem::path& ActiveStaticBgaPath() const noexcept;
+    [[nodiscard]] const std::filesystem::path& ActiveVideoBgaPath() const noexcept;
     [[nodiscard]] const session::ResultData* LatestResult() const noexcept;
 
 private:

@@ -104,6 +104,14 @@ const std::filesystem::path& GameFlow::ActiveStaticBgaPath() const noexcept {
     return songCatalog_.At(selectedSongIndex_).staticBgaFilePath;
 }
 
+const std::filesystem::path& GameFlow::ActiveVideoBgaPath() const noexcept {
+    static const std::filesystem::path emptyPath;
+    if (CurrentSceneId() != scenes::SceneId::Gameplay) {
+        return emptyPath;
+    }
+    return songCatalog_.At(selectedSongIndex_).videoBgaFilePath;
+}
+
 const session::ResultData* GameFlow::LatestResult() const noexcept {
     return latestResult_ ? &*latestResult_ : nullptr;
 }

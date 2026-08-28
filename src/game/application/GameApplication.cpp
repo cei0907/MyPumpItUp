@@ -253,7 +253,14 @@ void GameApplication::RenderFrame() {
     };
     const auto& palette = resourceCache_.ActiveTheme().Palette();
     if (const auto* gameplay = gameFlow_.ActiveGameplay(); gameplay != nullptr) {
-        static_cast<void>(sceneOverlayRenderer_.LoadGameplayBackground(gameFlow_.ActiveStaticBgaPath()));
+        const auto videoOpened = bgaVideoPlayer_.Open(gameFlow_.ActiveVideoBgaPath());
+        const auto* videoFrame = videoOpened ? bgaVideoPlayer_.FrameAt(gameplay->SongTimeSeconds()) : nullptr;
+        if (videoFrame != nullptr && sceneOverlayRenderer_.LoadGameplayVideoFrame(*videoFrame)) {
+            // The audio clock owns both note projection and video-frame selection.
+        } else {
+            sceneOverlayRenderer_.ClearGameplayVideoFrame();
+            static_cast<void>(sceneOverlayRenderer_.LoadGameplayBackground(gameFlow_.ActiveStaticBgaPath()));
+        }
         const auto items = gameplay->BuildRenderItemsForCurrentTime();
         const auto& score = gameplay->Score();
         const auto judgement = score.LatestJudgement().has_value()
@@ -271,6 +278,8 @@ void GameApplication::RenderFrame() {
             },
             static_cast<float>(gameplay->Energy().Value()));
     } else {
+        bgaVideoPlayer_.Close();
+        sceneOverlayRenderer_.ClearGameplayVideoFrame();
         sceneOverlayRenderer_.Draw(logicalViewport_, overlayText, palette);
     }
 

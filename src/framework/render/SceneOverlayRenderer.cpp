@@ -269,7 +269,39 @@ bool SceneOverlayRenderer::LoadGameplayBackground(const std::filesystem::path& i
     return SUCCEEDED(bitmapResult);
 }
 
+bool SceneOverlayRenderer::LoadGameplayVideoFrame(const video::BgaVideoFrame& frame) {
+    if (target_ == nullptr || frame.width == 0 || frame.height == 0 || frame.serial == 0
+        || frame.bgraPixels.size() != static_cast<std::size_t>(frame.width) * frame.height * 4U) {
+        return false;
+    }
+    if (frame.serial == videoFrameSerial_ && gameplayVideoFrame_ != nullptr) {
+        return true;
+    }
+
+    ID2D1Bitmap* bitmap = nullptr;
+    const auto result = target_->CreateBitmap(
+        D2D1::SizeU(frame.width, frame.height),
+        frame.bgraPixels.data(),
+        frame.width * 4U,
+        D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_IGNORE)),
+        &bitmap);
+    if (FAILED(result)) {
+        return false;
+    }
+
+    ReleaseCom(gameplayVideoFrame_);
+    gameplayVideoFrame_ = bitmap;
+    videoFrameSerial_ = frame.serial;
+    return true;
+}
+
+void SceneOverlayRenderer::ClearGameplayVideoFrame() {
+    ReleaseCom(gameplayVideoFrame_);
+    videoFrameSerial_ = 0;
+}
+
 void SceneOverlayRenderer::ReleaseTarget() {
+    ClearGameplayVideoFrame();
     ReleaseCom(gameplayBackground_);
     backgroundLoadAttempted_ = false;
     ReleaseCom(brush_);
@@ -347,7 +379,9 @@ void SceneOverlayRenderer::DrawGameplay(
         D2D1::Matrix3x2F::Scale(viewport.scale, viewport.scale)
         * D2D1::Matrix3x2F::Translation(viewport.x, viewport.y));
 
-    if (gameplayBackground_ != nullptr) {
+    if (gameplayVideoFrame_ != nullptr) {
+        target_->DrawBitmap(gameplayVideoFrame_, D2D1::RectF(0.0F, 0.0F, 1280.0F, 720.0F), 0.54F);
+    } else if (gameplayBackground_ != nullptr) {
         target_->DrawBitmap(gameplayBackground_, D2D1::RectF(0.0F, 0.0F, 1280.0F, 720.0F), 0.38F);
     } else {
         brush_->SetColor(D2D1::ColorF(0.025F, 0.06F, 0.12F, 1.0F));

@@ -37,7 +37,7 @@ The `State NN` prefix is a small, reviewable Git work unit inside the numbered i
 - [x] Stage 03 / State 16-1-3 — Prevent expired holds from re-anchoring as receptor ghosts
 - [x] Stage 03 / State 16-3 — Replace temporary note blocks with directional five-panel glyphs
 - [x] Stage 03 / State 17 — Pooled judgement, receptor, combo, and gauge feedback effects
-- [ ] Stage 03 / State 18 — Audio-synchronised song BGA video with dropped-frame handling and static fallback
+- [x] Stage 03 / State 18 — Audio-synchronised song BGA video with dropped-frame handling and static fallback
 
 ## Phase 0 — Technology and development foundation
 

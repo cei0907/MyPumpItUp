@@ -69,6 +69,7 @@ SongCatalog SongCatalog::CreateDemoCatalog(const std::filesystem::path& manifest
             }(),
             .audioFilePath = manifest.audioFilePath,
             .staticBgaFilePath = manifest.staticBgaFilePath,
+            .videoBgaFilePath = manifest.videoBgaFilePath,
             .audioOffsetSeconds = manifest.audioOffsetSeconds,
         },
     });

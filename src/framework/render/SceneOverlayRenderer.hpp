@@ -3,6 +3,7 @@
 #include "framework/assets/ThemeManifest.hpp"
 #include "framework/render/GameplayFeedback.hpp"
 #include "framework/render/LogicalViewport.hpp"
+#include "framework/video/BgaVideoFrame.hpp"
 
 #include <d2d1.h>
 #include <d3d11.h>
@@ -54,6 +55,8 @@ public:
     [[nodiscard]] bool Initialize();
     [[nodiscard]] bool CreateTarget(ID3D11Texture2D* backBuffer);
     [[nodiscard]] bool LoadGameplayBackground(const std::filesystem::path& imagePath);
+    [[nodiscard]] bool LoadGameplayVideoFrame(const video::BgaVideoFrame& frame);
+    void ClearGameplayVideoFrame();
     void ReleaseTarget();
     void Shutdown();
     void Draw(const core::ViewportRect& viewport, const SceneOverlayText& text, const assets::ThemePalette& palette);
@@ -77,8 +80,10 @@ private:
     IWICImagingFactory* wicFactory_ = nullptr;
     ID2D1PathGeometry* panelArrowGeometry_ = nullptr;
     ID2D1Bitmap* gameplayBackground_ = nullptr;
+    ID2D1Bitmap* gameplayVideoFrame_ = nullptr;
     std::filesystem::path backgroundSourcePath_;
     bool backgroundLoadAttempted_ = false;
+    std::uint64_t videoFrameSerial_ = 0;
     bool comInitialized_ = false;
 };
 

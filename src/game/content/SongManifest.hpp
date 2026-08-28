@@ -12,6 +12,7 @@ struct SongManifest final {
     std::filesystem::path chartFilePath;
     std::filesystem::path holdOverlayFilePath;
     std::filesystem::path staticBgaFilePath;
+    std::filesystem::path videoBgaFilePath;
     double audioOffsetSeconds = 0.0;
     int legacyStartPosition = 83;
 
