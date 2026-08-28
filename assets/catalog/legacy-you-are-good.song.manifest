@@ -1,0 +1,10 @@
+schemaVersion=1
+id=legacy-you-are-good
+title=You Are Good
+artist=Legacy local collection
+difficultyName=Legacy chart
+difficultyLevel=14
+audioPath=../local/songs/legacy/YouAreGood.mp3
+chartPath=../local/charts/legacy/YouAreGood_14.stp
+audioOffsetMilliseconds=0
+legacyStartPosition=682

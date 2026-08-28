@@ -1,6 +1,7 @@
 #pragma once
 
 #include "framework/audio/FmodAudioPlayer.hpp"
+#include "framework/render/SceneOverlayRenderer.hpp"
 #include "game/content/SongCatalog.hpp"
 #include "game/gameplay/GameplayRuntime.hpp"
 #include "game/scenes/SceneManager.hpp"
@@ -23,6 +24,7 @@ public:
 
     [[nodiscard]] scenes::SceneId CurrentSceneId() const noexcept;
     [[nodiscard]] scenes::SceneVisual CurrentSceneVisual() const;
+    [[nodiscard]] render::SongSelectOverlay CurrentSongSelectOverlay() const;
     [[nodiscard]] const content::SongMetadata& SelectedSong() const;
     [[nodiscard]] const chart::Chart& SelectedChart() const;
     [[nodiscard]] const session::PlaySession* ActiveSession() const noexcept;
@@ -36,12 +38,16 @@ private:
     void BeginSelectedSession();
     void FinishActiveSession();
     void CancelActiveSession() noexcept;
+    void MoveSongSelection(int direction) noexcept;
+    void MoveDifficultySelection(int direction) noexcept;
 
     content::SongCatalog songCatalog_;
     scenes::SceneManager sceneManager_;
     audio::FmodAudioPlayer audioPlayer_;
     bool audioPlaybackStarted_ = false;
     std::size_t selectedSongIndex_ = 0;
+    std::size_t selectedDifficultyIndex_ = 0;
+    bool difficultySelectionActive_ = false;
     std::optional<session::PlaySession> activeSession_;
     std::optional<gameplay::GameplayRuntime> activeGameplay_;
     std::optional<session::ResultData> latestResult_;

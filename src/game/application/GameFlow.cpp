@@ -11,7 +11,7 @@
 namespace pumpdx::game {
 
 GameFlow::GameFlow()
-    : songCatalog_(content::SongCatalog::CreateDemoCatalog(std::filesystem::path(PUMP_DX_DEFAULT_SONG_MANIFEST))) {
+    : songCatalog_(content::SongCatalog::CreateFromManifestDirectory(std::filesystem::path(PUMP_DX_SONG_CATALOG_DIRECTORY))) {
     static_cast<void>(audioPlayer_.Initialize());
 }
 
@@ -28,6 +28,36 @@ void GameFlow::HandleKeyReleased(const std::uint32_t virtualKey) {
     if (activeGameplay_) {
         if (const auto panel = input::ToFivePanelInput(virtualKey); panel.has_value()) {
             activeGameplay_->SetPanelPressed(static_cast<chart::PanelLane>(*panel), false);
+        }
+    }
+    if (CurrentSceneId() == scenes::SceneId::SongSelect) {
+        if (virtualKey == 'Z') {
+            difficultySelectionActive_ ? MoveDifficultySelection(-1) : MoveSongSelection(-1);
+            return;
+        }
+        if (virtualKey == 'C') {
+            difficultySelectionActive_ ? MoveDifficultySelection(1) : MoveSongSelection(1);
+            return;
+        }
+        if (virtualKey == 'S') {
+            if (difficultySelectionActive_) {
+                sceneManager_.RequestScene(scenes::SceneId::Gameplay);
+            } else {
+                difficultySelectionActive_ = true;
+            }
+            return;
+        }
+        if (virtualKey == 'Q' || virtualKey == 'E') {
+            difficultySelectionActive_ = false;
+            return;
+        }
+        if (virtualKey == input::kConfirm) {
+            sceneManager_.RequestScene(scenes::SceneId::Gameplay);
+            return;
+        }
+        if (virtualKey == input::kCancel && difficultySelectionActive_) {
+            difficultySelectionActive_ = false;
+            return;
         }
     }
     sceneManager_.HandleKeyReleased(virtualKey);
@@ -49,6 +79,7 @@ bool GameFlow::Update() {
 
     const auto currentScene = sceneManager_.CurrentId();
     if (previousScene == scenes::SceneId::SongSelect && currentScene == scenes::SceneId::Gameplay) {
+        difficultySelectionActive_ = false;
         BeginSelectedSession();
     } else if (previousScene == scenes::SceneId::Gameplay && currentScene == scenes::SceneId::Result) {
         FinishActiveSession();
@@ -57,6 +88,26 @@ bool GameFlow::Update() {
     }
 
     return true;
+}
+
+render::SongSelectOverlay GameFlow::CurrentSongSelectOverlay() const {
+    const auto& selected = SelectedSong();
+    const auto songCount = songCatalog_.Count();
+    const auto previousIndex = selectedSongIndex_ == 0 ? songCount - 1 : selectedSongIndex_ - 1;
+    const auto nextIndex = (selectedSongIndex_ + 1) % songCount;
+    return {
+        .title = selected.title,
+        .artist = selected.artist,
+        .difficultyName = selected.difficultyName,
+        .previousTitle = songCount > 1 ? songCatalog_.At(previousIndex).metadata.title : std::wstring_view{},
+        .nextTitle = songCount > 1 ? songCatalog_.At(nextIndex).metadata.title : std::wstring_view{},
+        .difficultyLevel = selected.difficultyLevel,
+        .selectedSongNumber = static_cast<std::uint32_t>(selectedSongIndex_ + 1),
+        .songCount = static_cast<std::uint32_t>(songCount),
+        .selectedDifficultyNumber = static_cast<std::uint32_t>(selectedDifficultyIndex_ + 1),
+        .difficultyCount = static_cast<std::uint32_t>(songCatalog_.DifficultyCount(selectedSongIndex_)),
+        .difficultySelectionActive = difficultySelectionActive_,
+    };
 }
 
 scenes::SceneId GameFlow::CurrentSceneId() const noexcept {
@@ -77,11 +128,11 @@ scenes::SceneVisual GameFlow::CurrentSceneVisual() const {
 }
 
 const content::SongMetadata& GameFlow::SelectedSong() const {
-    return songCatalog_.At(selectedSongIndex_).metadata;
+    return songCatalog_.At(selectedSongIndex_, selectedDifficultyIndex_).metadata;
 }
 
 const chart::Chart& GameFlow::SelectedChart() const {
-    return *songCatalog_.At(selectedSongIndex_).chart;
+    return *songCatalog_.At(selectedSongIndex_, selectedDifficultyIndex_).chart;
 }
 
 const session::PlaySession* GameFlow::ActiveSession() const noexcept {
@@ -101,7 +152,7 @@ const std::filesystem::path& GameFlow::ActiveStaticBgaPath() const noexcept {
     if (CurrentSceneId() != scenes::SceneId::Gameplay) {
         return emptyPath;
     }
-    return songCatalog_.At(selectedSongIndex_).staticBgaFilePath;
+    return songCatalog_.At(selectedSongIndex_, selectedDifficultyIndex_).staticBgaFilePath;
 }
 
 const std::filesystem::path& GameFlow::ActiveVideoBgaPath() const noexcept {
@@ -109,7 +160,7 @@ const std::filesystem::path& GameFlow::ActiveVideoBgaPath() const noexcept {
     if (CurrentSceneId() != scenes::SceneId::Gameplay) {
         return emptyPath;
     }
-    return songCatalog_.At(selectedSongIndex_).videoBgaFilePath;
+    return songCatalog_.At(selectedSongIndex_, selectedDifficultyIndex_).videoBgaFilePath;
 }
 
 const session::ResultData* GameFlow::LatestResult() const noexcept {
@@ -117,8 +168,8 @@ const session::ResultData* GameFlow::LatestResult() const noexcept {
 }
 
 void GameFlow::BeginSelectedSession() {
-    activeSession_.emplace(SelectedSong(), songCatalog_.At(selectedSongIndex_).chart);
-    const auto& song = songCatalog_.At(selectedSongIndex_);
+    activeSession_.emplace(SelectedSong(), songCatalog_.At(selectedSongIndex_, selectedDifficultyIndex_).chart);
+    const auto& song = songCatalog_.At(selectedSongIndex_, selectedDifficultyIndex_);
     audioPlaybackStarted_ = false;
     if (audioPlayer_.Play(song.audioFilePath)) {
         audioPlaybackStarted_ = true;
@@ -149,6 +200,31 @@ void GameFlow::CancelActiveSession() noexcept {
     audioPlaybackStarted_ = false;
     activeGameplay_.reset();
     activeSession_.reset();
+}
+
+void GameFlow::MoveSongSelection(const int direction) noexcept {
+    const auto count = songCatalog_.Count();
+    if (count == 0) {
+        return;
+    }
+    if (direction < 0) {
+        selectedSongIndex_ = selectedSongIndex_ == 0 ? count - 1 : selectedSongIndex_ - 1;
+    } else if (direction > 0) {
+        selectedSongIndex_ = (selectedSongIndex_ + 1) % count;
+    }
+    selectedDifficultyIndex_ = 0;
+}
+
+void GameFlow::MoveDifficultySelection(const int direction) noexcept {
+    const auto count = songCatalog_.DifficultyCount(selectedSongIndex_);
+    if (count == 0) {
+        return;
+    }
+    if (direction < 0) {
+        selectedDifficultyIndex_ = selectedDifficultyIndex_ == 0 ? count - 1 : selectedDifficultyIndex_ - 1;
+    } else if (direction > 0) {
+        selectedDifficultyIndex_ = (selectedDifficultyIndex_ + 1) % count;
+    }
 }
 
 } // namespace pumpdx::game

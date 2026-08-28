@@ -100,7 +100,7 @@ target_include_directories(pumpdx_gameflow
 target_compile_features(pumpdx_gameflow PUBLIC cxx_std_20)
 target_link_libraries(pumpdx_gameflow PUBLIC pumpdx_scenes pumpdx_session)
 target_compile_definitions(pumpdx_gameflow PRIVATE
-    PUMP_DX_DEFAULT_SONG_MANIFEST=L"${CMAKE_CURRENT_SOURCE_DIR}/assets/catalog/legacy-new-song-to-god.song.manifest"
+    PUMP_DX_SONG_CATALOG_DIRECTORY=L"${CMAKE_CURRENT_SOURCE_DIR}/assets/catalog"
 )
 
 if(MSVC)

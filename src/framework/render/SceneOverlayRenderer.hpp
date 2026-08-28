@@ -39,6 +39,21 @@ struct SceneOverlayMotion final {
     float instructionReveal = 1.0F;
 };
 
+// The renderer owns only the presentation shape. Song browsing state stays in GameFlow.
+struct SongSelectOverlay final {
+    std::wstring_view title;
+    std::wstring_view artist;
+    std::wstring_view difficultyName;
+    std::wstring_view previousTitle;
+    std::wstring_view nextTitle;
+    std::uint8_t difficultyLevel = 0;
+    std::uint32_t selectedSongNumber = 1;
+    std::uint32_t songCount = 1;
+    std::uint32_t selectedDifficultyNumber = 1;
+    std::uint32_t difficultyCount = 1;
+    bool difficultySelectionActive = false;
+};
+
 struct GameplayRenderItem final {
     std::uint8_t lane = 0;
     float headY = 0.0F;
@@ -77,6 +92,11 @@ public:
     void Draw(
         const core::ViewportRect& viewport,
         const SceneOverlayText& text,
+        const assets::ThemePalette& palette,
+        const SceneOverlayMotion& motion);
+    void DrawSongSelect(
+        const core::ViewportRect& viewport,
+        const SongSelectOverlay& song,
         const assets::ThemePalette& palette,
         const SceneOverlayMotion& motion);
     void DrawGameplay(

@@ -1,0 +1,10 @@
+schemaVersion=1
+id=legacy-flying-dock
+title=Flying Dock
+artist=Legacy local collection
+difficultyName=Legacy chart
+difficultyLevel=5
+audioPath=../local/songs/legacy/FlyingDock.mp3
+chartPath=../local/charts/legacy/FlyingDock_5.stp
+audioOffsetMilliseconds=0
+legacyStartPosition=948

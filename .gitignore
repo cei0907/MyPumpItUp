@@ -52,6 +52,7 @@
 
 # CMake user-specific presets must not override the shared presets.
 /CMakeUserPresets.json
+/CMakeSettings.json
 
 # -----------------------------------------------------------------------------
 # Browser chart/theme editor output

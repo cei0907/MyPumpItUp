@@ -311,7 +311,15 @@ void GameApplication::RenderFrame() {
     } else {
         bgaVideoPlayer_.Close();
         sceneOverlayRenderer_.ClearGameplayVideoFrame();
-        sceneOverlayRenderer_.Draw(logicalViewport_, overlayText, palette, sceneMotion);
+        if (currentSceneId == scenes::SceneId::SongSelect) {
+            sceneOverlayRenderer_.DrawSongSelect(
+                logicalViewport_,
+                gameFlow_.CurrentSongSelectOverlay(),
+                palette,
+                sceneMotion);
+        } else {
+            sceneOverlayRenderer_.Draw(logicalViewport_, overlayText, palette, sceneMotion);
+        }
     }
 
     swapChain_->Present(1, 0);

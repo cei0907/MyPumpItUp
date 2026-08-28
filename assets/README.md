@@ -2,7 +2,16 @@
 
 Version-controlled assets must be small, intentional examples or assets with clear redistribution rights.
 
-Large local media, unlicensed media, generated output, and recordings belong in the ignored paths documented by `.gitignore`. Song packages and theme packages will be defined after the first playable vertical slice is working.
+Large local media, unlicensed media, generated output, and recordings belong in the ignored paths documented by `.gitignore`.
+
+## Restoring the legacy local collection
+
+The tracked manifests in `assets/catalog/` describe the four songs that were registered in the original SongMenu: Africa, Flying Dock, New Song To God, and You Are Good. Their MP3 files and STP charts remain local-only. To restore them for development, copy only these files from `DxPumpV0.76`:
+
+- `music/Africa.mp3`, `music/FlyingDock.mp3`, `music/NewSongToGod.mp3`, `music/YouAreGood.mp3` to `assets/local/songs/legacy/`
+- `step/Africa_16.stp`, `step/FlyingDock_3.stp`, `step/FlyingDock_5.stp`, `step/NewSongToGod_10.stp`, `step/YouAreGood_14.stp` to `assets/local/charts/legacy/`
+
+The catalog scans every `*.song.manifest` file, groups entries with the same `id` as difficulty choices, and never commits those local media files.
 
 ## Local BGA video
 

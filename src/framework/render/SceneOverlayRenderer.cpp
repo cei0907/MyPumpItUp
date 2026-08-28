@@ -381,6 +381,98 @@ void SceneOverlayRenderer::Draw(
     target_->EndDraw();
 }
 
+void SceneOverlayRenderer::DrawSongSelect(
+    const core::ViewportRect& viewport,
+    const SongSelectOverlay& song,
+    const assets::ThemePalette& palette,
+    const SceneOverlayMotion& motion) {
+    if (target_ == nullptr || brush_ == nullptr || viewport.scale <= 0.0F) {
+        return;
+    }
+
+    target_->BeginDraw();
+    const auto transform = D2D1::Matrix3x2F::Scale(viewport.scale, viewport.scale)
+        * D2D1::Matrix3x2F::Translation(viewport.x, viewport.y);
+    target_->SetTransform(transform);
+
+    const auto entrance = (std::clamp)(motion.entrance, 0.0F, 1.0F);
+    const auto pulse = (std::clamp)(motion.loopPulse, 0.0F, 1.0F);
+    const auto heading = ToD2DColor(palette.heading);
+    const auto detail = ToD2DColor(palette.detail);
+    const auto accent = ToD2DColor(palette.accent);
+    const auto panel = ToD2DColor(palette.panel);
+
+    const auto drawText = [this](
+                              const std::wstring_view value,
+                              IDWriteTextFormat* const format,
+                              const D2D1_RECT_F rect,
+                              const D2D1_COLOR_F color) {
+        brush_->SetColor(color);
+        target_->DrawText(value.data(), static_cast<UINT32>(value.size()), format, rect, brush_);
+    };
+    const auto drawSongCard = [this, &drawText, panel, heading, detail, accent, entrance](
+                                  const D2D1_RECT_F rect,
+                                  const std::wstring_view caption,
+                                  const std::wstring_view value,
+                                  const bool selected) {
+        brush_->SetColor(WithOpacity(panel, selected ? 0.92F * entrance : 0.50F * entrance));
+        target_->FillRoundedRectangle(D2D1::RoundedRect(rect, 16.0F, 16.0F), brush_);
+        brush_->SetColor(WithOpacity(selected ? accent : detail, selected ? entrance : 0.40F * entrance));
+        target_->DrawRoundedRectangle(D2D1::RoundedRect(rect, 16.0F, 16.0F), brush_, selected ? 4.0F : 2.0F);
+        drawText(caption, instructionFormat_, D2D1::RectF(rect.left + 18.0F, rect.top + 14.0F, rect.right - 18.0F, rect.top + 45.0F),
+            WithOpacity(detail, selected ? entrance : 0.55F * entrance));
+        drawText(value, selected ? headlineFormat_ : detailFormat_,
+            D2D1::RectF(rect.left + 20.0F, rect.top + 48.0F, rect.right - 20.0F, rect.bottom - 12.0F),
+            WithOpacity(heading, selected ? entrance : 0.72F * entrance));
+    };
+
+    brush_->SetColor(WithOpacity(panel, 0.82F));
+    target_->FillRectangle(D2D1::RectF(0.0F, 0.0F, 1280.0F, 720.0F), brush_);
+    brush_->SetColor(WithOpacity(accent, 0.08F + pulse * 0.08F));
+    target_->FillEllipse(D2D1::Ellipse(D2D1::Point2F(640.0F, 228.0F), 380.0F + pulse * 24.0F, 226.0F + pulse * 14.0F), brush_);
+
+    drawText(L"SONG SELECT", detailFormat_, D2D1::RectF(62.0F, 42.0F, 350.0F, 78.0F), WithOpacity(heading, entrance));
+    drawText(std::to_wstring(song.selectedSongNumber) + L" / " + std::to_wstring(song.songCount), instructionFormat_,
+        D2D1::RectF(1065.0F, 46.0F, 1214.0F, 78.0F), WithOpacity(detail, entrance));
+
+    brush_->SetColor(WithOpacity(panel, 0.88F * entrance));
+    target_->FillRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(52.0F, 126.0F, 272.0F, 588.0F), 18.0F, 18.0F), brush_);
+    brush_->SetColor(WithOpacity(accent, entrance));
+    target_->FillRectangle(D2D1::RectF(52.0F, 126.0F, 60.0F, 588.0F), brush_);
+    drawText(L"PLAYER 1", detailFormat_, D2D1::RectF(82.0F, 160.0F, 244.0F, 202.0F), WithOpacity(heading, entrance));
+    drawText(L"SINGLE", instructionFormat_, D2D1::RectF(82.0F, 224.0F, 244.0F, 254.0F), WithOpacity(detail, entrance));
+    drawText(L"SPEED", instructionFormat_, D2D1::RectF(82.0F, 302.0F, 244.0F, 332.0F), WithOpacity(detail, entrance));
+    drawText(L"x 1.0", detailFormat_, D2D1::RectF(82.0F, 334.0F, 244.0F, 372.0F), WithOpacity(heading, entrance));
+    drawText(L"ENTER  PLAY", instructionFormat_, D2D1::RectF(82.0F, 454.0F, 244.0F, 484.0F), WithOpacity(detail, motion.instructionReveal));
+    drawText(L"ESC  BACK", instructionFormat_, D2D1::RectF(82.0F, 496.0F, 244.0F, 526.0F), WithOpacity(detail, motion.instructionReveal));
+
+    const auto centerOffset = (1.0F - entrance) * 82.0F;
+    drawSongCard(D2D1::RectF(328.0F, 92.0F + centerOffset, 956.0F, 345.0F + centerOffset),
+        L"SELECTED SONG", song.title, true);
+    drawText(song.artist.empty() ? L"ARTIST UNKNOWN" : song.artist, detailFormat_,
+        D2D1::RectF(370.0F, 282.0F + centerOffset, 914.0F, 327.0F + centerOffset), WithOpacity(detail, motion.detailReveal));
+
+    drawSongCard(D2D1::RectF(292.0F, 398.0F, 512.0F, 498.0F), L"PREVIOUS",
+        song.previousTitle.empty() ? L"—" : song.previousTitle, false);
+    drawSongCard(D2D1::RectF(768.0F, 398.0F, 988.0F, 498.0F), L"NEXT",
+        song.nextTitle.empty() ? L"—" : song.nextTitle, false);
+    drawSongCard(D2D1::RectF(500.0F, 542.0F, 780.0F, 662.0F), L"CURRENT", song.title, true);
+
+    brush_->SetColor(WithOpacity(panel, 0.94F * entrance));
+    target_->FillRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(500.0F, 382.0F, 780.0F, 516.0F), 14.0F, 14.0F), brush_);
+    brush_->SetColor(WithOpacity(accent, song.difficultySelectionActive ? 0.80F + pulse * 0.20F : 0.38F));
+    target_->DrawRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(500.0F, 382.0F, 780.0F, 516.0F), 14.0F, 14.0F), brush_, 3.0F);
+    drawText(L"DIFFICULTY", instructionFormat_, D2D1::RectF(524.0F, 400.0F, 756.0F, 428.0F), WithOpacity(detail, entrance));
+    drawText(song.difficultyName, detailFormat_, D2D1::RectF(524.0F, 432.0F, 690.0F, 478.0F), WithOpacity(heading, entrance));
+    drawText(L"LV. " + std::to_wstring(song.difficultyLevel), detailFormat_,
+        D2D1::RectF(684.0F, 432.0F, 756.0F, 478.0F), WithOpacity(accent, entrance));
+    drawText(std::to_wstring(song.selectedDifficultyNumber) + L" / " + std::to_wstring(song.difficultyCount), instructionFormat_,
+        D2D1::RectF(524.0F, 478.0F, 756.0F, 504.0F), WithOpacity(detail, entrance));
+
+    target_->SetTransform(D2D1::Matrix3x2F::Identity());
+    target_->EndDraw();
+}
+
 void SceneOverlayRenderer::DrawGameplay(
     const core::ViewportRect& viewport,
     const SceneOverlayText& text,

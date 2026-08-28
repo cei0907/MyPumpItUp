@@ -61,11 +61,38 @@ void TestCancelledSessionDoesNotProduceResult() {
     Expect(gameFlow.LatestResult() == nullptr, "Cancelled gameplay must not create a result.");
 }
 
+void TestLegacySongSelectNavigationAndDifficultyChoice() {
+    pumpdx::game::GameFlow gameFlow;
+
+    Confirm(gameFlow, SceneId::SongSelect, "Expected song select before navigation test.");
+    const auto initial = gameFlow.CurrentSongSelectOverlay();
+    Expect(initial.songCount == 4, "The restored local catalog must expose four legacy menu songs.");
+    Expect(initial.title == L"Africa", "Legacy menu order must begin with Africa.");
+
+    gameFlow.HandleKeyReleased('C');
+    const auto flyingDock = gameFlow.CurrentSongSelectOverlay();
+    Expect(flyingDock.title == L"Flying Dock", "SE panel input must move to the next song.");
+    Expect(flyingDock.difficultyCount == 2, "Flying Dock must expose its two legacy difficulties.");
+
+    gameFlow.HandleKeyReleased('S');
+    Expect(gameFlow.CurrentSongSelectOverlay().difficultySelectionActive,
+        "Center panel input must enter difficulty-selection mode.");
+    gameFlow.HandleKeyReleased('C');
+    const auto difficultyFive = gameFlow.CurrentSongSelectOverlay();
+    Expect(difficultyFive.difficultyLevel == 5, "SE panel input must move through selected-song difficulties.");
+
+    gameFlow.HandleKeyReleased('S');
+    Expect(gameFlow.Update(), "Confirming a selected difficulty must start gameplay.");
+    Expect(gameFlow.CurrentSceneId() == SceneId::Gameplay, "Selected legacy difficulty must enter gameplay.");
+    Expect(gameFlow.SelectedSong().difficultyLevel == 5, "Gameplay must receive the chosen difficulty.");
+}
+
 } // namespace
 
 int main() {
     TestCompletedSessionProducesIndependentResult();
     TestCancelledSessionDoesNotProduceResult();
+    TestLegacySongSelectNavigationAndDifficultyChoice();
 
     std::cout << "Game flow tests passed.\n";
     return EXIT_SUCCESS;

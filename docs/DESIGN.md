@@ -368,3 +368,13 @@ The future browser `Theme Editor` works with the same manifest and provides, in 
 3. per-scene live preview, validation, package import/export/duplication, and a test-theme activation flow.
 
 Theme packages have a schema version and can declare their game-version compatibility.  They contain only assets the creator owns or is licensed to distribute.
+
+## 15. Song catalog and Song Select
+
+The runtime reads every tracked `*.song.manifest` file in `assets/catalog/`. Entries with the same stable `id` are one song and their individual manifests are its selectable difficulties. A manifest keeps display metadata separate from local audio and chart paths, so a title never has to match a file name.
+
+The Song Select presentation preserves the useful legacy composition on the 1280×720 logical canvas: a large selected-song banner, compact previous/next banners, a lower current-song banner, a left player/status panel, and a distinct difficulty panel. The runtime state owns the song and difficulty indices; the renderer receives an immutable presentation snapshot only.
+
+Keyboard mapping mirrors the five-panel menu flow for now: `Z`/`C` moves songs while browsing, `S` enters difficulty mode, `Z`/`C` moves difficulties, and `S` starts the selected chart. `Q`/`E` or Escape exits difficulty mode; Enter remains a desktop convenience shortcut to start the current chart. Physical-pad mapping will use the same semantic actions later.
+
+The restored original collection is deliberately local-only: Africa (16), Flying Dock (3/5), New Song To God (10), and You Are Good (14). MP3/STP source files live under ignored `assets/local/`; manifests and documentation are the only catalog files committed publicly. This makes a fresh clone safe while keeping the user’s local development copy immediately playable.

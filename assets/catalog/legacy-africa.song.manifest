@@ -1,0 +1,11 @@
+# Local-only MP3 and STP files are restored from DxPumpV0.76 during development.
+schemaVersion=1
+id=legacy-africa
+title=Africa
+artist=Legacy local collection
+difficultyName=Legacy chart
+difficultyLevel=16
+audioPath=../local/songs/legacy/Africa.mp3
+chartPath=../local/charts/legacy/Africa_16.stp
+audioOffsetMilliseconds=0
+legacyStartPosition=600
