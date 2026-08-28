@@ -6,6 +6,6 @@ artist=Legacy local collection
 difficultyName=Legacy chart
 difficultyLevel=16
 audioPath=../local/songs/legacy/Africa.mp3
-chartPath=../local/charts/legacy/Africa_16.stp
+chartPath=../local/charts/converted/Africa_16.pdxchart
 audioOffsetMilliseconds=0
 legacyStartPosition=600

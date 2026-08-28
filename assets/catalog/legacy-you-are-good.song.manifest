@@ -5,6 +5,6 @@ artist=Legacy local collection
 difficultyName=Legacy chart
 difficultyLevel=14
 audioPath=../local/songs/legacy/YouAreGood.mp3
-chartPath=../local/charts/legacy/YouAreGood_14.stp
+chartPath=../local/charts/converted/YouAreGood_14.pdxchart
 audioOffsetMilliseconds=0
 legacyStartPosition=682

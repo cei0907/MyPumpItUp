@@ -113,8 +113,10 @@ add_library(pumpdx_chart
     src/game/chart/Beat.cpp
     src/game/chart/Chart.cpp
     src/game/chart/ChartValidator.cpp
+    src/game/chart/LegacyStpConverter.cpp
     src/game/chart/LegacyStpImporter.cpp
     src/game/chart/NativeChartLoader.cpp
+    src/game/chart/NativeChartWriter.cpp
     src/game/chart/TimingMap.cpp
 )
 
@@ -125,6 +127,12 @@ target_include_directories(pumpdx_chart
 
 target_compile_features(pumpdx_chart PUBLIC cxx_std_20)
 target_link_libraries(pumpdx_session PUBLIC pumpdx_chart)
+
+add_executable(PumpDXChartConvert
+    tools/chart-converter/main.cpp
+)
+target_link_libraries(PumpDXChartConvert PRIVATE pumpdx_chart)
+target_compile_features(PumpDXChartConvert PRIVATE cxx_std_20)
 
 add_library(pumpdx_gameplay
     src/game/gameplay/DebugSongClock.cpp
@@ -453,4 +461,20 @@ if(BUILD_TESTING)
     endif()
 
     add_test(NAME PumpDXNativeChartTests COMMAND PumpDXNativeChartTests)
+
+    add_executable(PumpDXLegacyStpConversionTests
+        tests/LegacyStpConversionTests.cpp
+    )
+    target_link_libraries(PumpDXLegacyStpConversionTests PRIVATE pumpdx_chart)
+    target_compile_features(PumpDXLegacyStpConversionTests PRIVATE cxx_std_20)
+    target_compile_definitions(PumpDXLegacyStpConversionTests PRIVATE
+        PUMP_DX_TEST_LEGACY_STP="${CMAKE_CURRENT_SOURCE_DIR}/tests/data/legacy-taps.stp"
+        PUMP_DX_TEST_NATIVE_CHART="${CMAKE_CURRENT_SOURCE_DIR}/tests/data/native-holds.pdxchart"
+    )
+    if(MSVC)
+        target_compile_options(PumpDXLegacyStpConversionTests PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
+    else()
+        target_compile_options(PumpDXLegacyStpConversionTests PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+    add_test(NAME PumpDXLegacyStpConversionTests COMMAND PumpDXLegacyStpConversionTests)
 endif()

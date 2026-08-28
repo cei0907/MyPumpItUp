@@ -24,6 +24,10 @@ TimingMap::TimingMap(std::vector<TempoSegment> segments)
     }
 }
 
+const std::vector<TempoSegment>& TimingMap::Segments() const noexcept {
+    return segments_;
+}
+
 double TimingMap::SecondsAt(const Beat& beat) const {
     if (beat < Beat::Zero()) {
         throw std::invalid_argument("Timing map does not support beats before zero.");

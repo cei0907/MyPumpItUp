@@ -10,6 +10,8 @@ public:
     Beat(std::int64_t numerator = 0, std::int64_t denominator = 1);
 
     [[nodiscard]] static Beat Zero() noexcept;
+    [[nodiscard]] std::int64_t Numerator() const noexcept;
+    [[nodiscard]] std::int64_t Denominator() const noexcept;
     [[nodiscard]] double ToDouble() const noexcept;
     [[nodiscard]] Beat operator+(const Beat& other) const;
     [[nodiscard]] Beat operator-(const Beat& other) const;

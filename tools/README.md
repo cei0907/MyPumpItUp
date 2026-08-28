@@ -20,6 +20,8 @@ Open the local address shown by the command. In State 21 it can:
 - edit chart id and initial BPM;
 - write the same `.pdxchart` format accepted by `NativeChartLoader`.
 
+After State 23, open the full converted local charts from `assets/local/charts/converted/`. They contain every legacy tap; `NewSongToGod_10.pdxchart` also contains the former hold overlay, so it is the first complete editable conversion.
+
 On Edge or another browser that supports the File System Access API, an opened chart saves back to the selected file. Other browsers download the edited file, which can then replace the source chart manually.
 
 The timeline is intentionally vertical: time moves downward through the five fixed columns, and the visible Canvas is the only note rendering surface. This remains responsive even when a chart has many events.

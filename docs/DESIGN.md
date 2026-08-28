@@ -275,6 +275,8 @@ State 21 establishes the local implementation in `tools/chart-editor/`. It keeps
 
 State 22 changes the editor to the intended vertical five-lane representation: musical time increases downward, each lane stays in a fixed column, and long notes are created by a downward drag in an empty range. A selected hold’s lower tail can be dragged to resize it, while its tick count remains an explicit editable value. The editor prevents a new or resized hold from overlapping another event in the same lane, matching the runtime’s collision-safe authoring rule.
 
+State 23 makes legacy migration one-way and verifiable. `LegacyStpConverter` reads the original immutable `.stp` with the same lead-in calculation used at runtime, optionally merges an existing native hold overlay, and creates a complete `Chart`. `NativeChartWriter` then writes exact rational beats, lanes, tempo segments, taps, and hold tick counts to `.pdxchart`. The converter round-trip test reloads that output and compares event type, lane, start/end beat, and hold ticks. Original `.stp` files remain untouched in `assets/local/charts/legacy/`; generated complete charts live beside them in ignored `assets/local/charts/converted/`.
+
 ## 11. First playable vertical slice
 
 The first implementation milestone is complete only when all of the following work in one test song:

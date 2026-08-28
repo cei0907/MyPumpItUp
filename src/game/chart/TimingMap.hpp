@@ -15,6 +15,7 @@ class TimingMap final {
 public:
     explicit TimingMap(std::vector<TempoSegment> segments);
 
+    [[nodiscard]] const std::vector<TempoSegment>& Segments() const noexcept;
     [[nodiscard]] double SecondsAt(const Beat& beat) const;
 
 private:

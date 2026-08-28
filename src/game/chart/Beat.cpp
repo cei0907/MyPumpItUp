@@ -24,6 +24,14 @@ Beat Beat::Zero() noexcept {
     return {};
 }
 
+std::int64_t Beat::Numerator() const noexcept {
+    return numerator_;
+}
+
+std::int64_t Beat::Denominator() const noexcept {
+    return denominator_;
+}
+
 double Beat::ToDouble() const noexcept {
     return static_cast<double>(numerator_) / static_cast<double>(denominator_);
 }

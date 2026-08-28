@@ -40,7 +40,7 @@ export default function Home() {
   const [selectedNote, setSelectedNote] = useState<number | null>(null);
   const [tool, setTool] = useState<Tool>('tap');
   const [drag, setDrag] = useState<DragState | null>(null);
-  const [notice, setNotice] = useState('Tap tool selected. Click an empty lane cell to add a tap note.');
+  const [notice, setNotice] = useState('Tap tool selected. Open a converted local chart, or load the included hold-only demo.');
   const [fileName, setFileName] = useState('new-song-to-god-hold-playtest.pdxchart');
   const [fileHandle, setFileHandle] = useState<FileHandleLike | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -195,7 +195,7 @@ export default function Home() {
   };
 
   return <main className="editor-shell">
-    <header className="topbar"><div><p className="eyebrow">PUMPDX / STAGE 04</p><h1>Chart Editor</h1></div><div className="topbar-actions"><button className="quiet-button" onClick={() => loadText(sampleChart, 'new-song-to-god-hold-playtest.pdxchart')}>Load sample</button><button className="quiet-button" onClick={openChart}>Open .pdxchart</button><button className="primary-button" onClick={saveChart}>Save chart</button><input ref={inputRef} className="hidden-input" type="file" accept=".pdxchart,text/plain" onChange={onInputFile} /></div></header>
+    <header className="topbar"><div><p className="eyebrow">PUMPDX / STAGE 04</p><h1>Chart Editor</h1></div><div className="topbar-actions"><button className="quiet-button" onClick={() => loadText(sampleChart, 'new-song-to-god-hold-playtest.pdxchart')}>Load hold demo</button><button className="quiet-button" onClick={openChart}>Open .pdxchart</button><button className="primary-button" onClick={saveChart}>Save chart</button><input ref={inputRef} className="hidden-input" type="file" accept=".pdxchart,text/plain" onChange={onInputFile} /></div></header>
     <section className="editor-grid"><aside className="inspector">
       <section className="panel"><p className="panel-kicker">Chart metadata</p><label>Chart ID<input value={chart.id} onChange={(event) => setChart((current) => ({ ...current, id: event.target.value }))} /></label><label>Initial BPM<input type="number" min="1" value={chart.tempo[0]?.bpm ?? 120} onChange={(event) => { const bpm = Number(event.target.value); if (bpm > 0) setChart((current) => ({ ...current, tempo: [{ ...current.tempo[0], bpm }] })); }} /></label><p className="hint">State 22 keeps one initial BPM. Tempo changes arrive with the advanced timing state.</p></section>
       <section className="panel"><p className="panel-kicker">Note tool</p><div className="tool-row"><button className={tool === 'tap' ? 'tool-button active' : 'tool-button'} onClick={() => setActiveTool('tap')}>Tap</button><button className={tool === 'hold' ? 'tool-button active' : 'tool-button'} onClick={() => setActiveTool('hold')}>Hold</button></div><p className="hint">Hold: drag downward in one lane. Drag a selected hold’s lower tail to resize it.</p></section>
