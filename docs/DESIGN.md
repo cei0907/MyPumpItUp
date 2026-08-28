@@ -273,6 +273,8 @@ The 2023 `stepCreator2.html` is retained as a useful prototype reference only.  
 
 State 21 establishes the local implementation in `tools/chart-editor/`. It keeps chart parsing and serialization separate from the React/Canvas interface, opens and saves the runtime-compatible `.pdxchart` text format, displays only one canvas timeline rather than one DOM node per note, and records basic tap edits as undoable document snapshots. Direct in-place saving uses the browser File System Access API when available; the download fallback preserves the same source format. Hold authoring, arbitrary grids, tuplets, and waveform work remain later states.
 
+State 22 changes the editor to the intended vertical five-lane representation: musical time increases downward, each lane stays in a fixed column, and long notes are created by a downward drag in an empty range. A selected hold’s lower tail can be dragged to resize it, while its tick count remains an explicit editable value. The editor prevents a new or resized hold from overlapping another event in the same lane, matching the runtime’s collision-safe authoring rule.
+
 ## 11. First playable vertical slice
 
 The first implementation milestone is complete only when all of the following work in one test song:
