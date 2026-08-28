@@ -20,7 +20,7 @@ Chart LegacyStpConverter::Convert(
         const auto overlayChart = NativeChartLoader::Load(*holdOverlayPath);
         notes.insert(notes.end(), overlayChart.Notes().begin(), overlayChart.Notes().end());
     }
-    return Chart(std::move(nativeChartId), baseChart.Timing(), std::move(notes));
+    return Chart(std::move(nativeChartId), baseChart.Timing(), std::move(notes), baseChart.DelaySeconds());
 }
 
 } // namespace pumpdx::chart

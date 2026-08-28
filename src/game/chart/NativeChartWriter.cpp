@@ -1,6 +1,7 @@
 #include "game/chart/NativeChartWriter.hpp"
 
 #include <fstream>
+#include <cmath>
 #include <iomanip>
 #include <stdexcept>
 #include <string_view>
@@ -32,7 +33,8 @@ namespace {
 std::string NativeChartWriter::Serialize(const Chart& chart) {
     std::ostringstream output;
     output << "schemaVersion=1\n";
-    output << "id=" << chart.Id() << "\n\n";
+    output << "id=" << chart.Id() << '\n';
+    output << "delayMilliseconds=" << static_cast<long long>(std::llround(chart.DelaySeconds() * 1000.0)) << "\n\n";
     output << "[tempo]\n";
     output << std::setprecision(15);
     for (const auto& segment : chart.Timing().Segments()) {

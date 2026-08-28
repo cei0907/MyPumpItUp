@@ -44,7 +44,8 @@
 - [x] Stage 04 / State 21 — 로컬 브라우저 Chart Editor 기반: `.pdxchart` 열기/저장, Canvas 5레인 타임라인, 탭 편집, Undo/Redo
 - [x] Stage 04 / State 22 — 세로 5레인 타임라인, 드래그 롱노트 생성/길이 변경, 롱노트별 틱 수 편집
 - [x] Stage 04 / State 23 — 검증된 `.stp` → 탭 전용 `.pdxchart` 변환, 롱노트 플레이테스트 체보는 별도 네이티브 체보로 유지
-- [x] Stage 04 / State 24 — DAW식 Select/Input/Delete 포인터, 길이·세로 확대/축소가 가능한 타임라인, 방향 패널 심볼, 정확한 N연음 격자 스냅
+- [x] Stage 04 / State 24 — DAW식 Select/Input/Delete 포인터, 4마디 단위 정사각형 격자 뷰, 입력 칸 미리보기, 방향 패널 심볼, 정확한 N연음 격자 스냅
+- [x] Stage 04 / State 25 — 네이티브 체보 delay 메타데이터, 에디터 delay 작성, 런타임 첫 마디 타이밍
 
 ## 단계 0 — 기술 스택과 개발 기반
 

@@ -1,5 +1,6 @@
 #include "game/chart/NativeChartLoader.hpp"
 
+#include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
@@ -20,6 +21,7 @@ void TestNativeChartLoadsTupletsAndVariableHoldTicks() {
     const auto& notes = chart.Notes();
 
     Expect(chart.Id() == "native-hold-test", "Native chart id was not loaded.");
+    Expect(std::abs(chart.DelaySeconds() - 0.75) < 0.000001, "Native chart delay was not loaded.");
     Expect(notes.size() == 4, "Native chart lost note events.");
     Expect(pumpdx::chart::EventStartBeat(notes[1]) == pumpdx::chart::Beat(1, 3), "Triplet beat was not loaded exactly.");
 

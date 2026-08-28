@@ -129,6 +129,8 @@ Chart NativeChartLoader::Load(const std::filesystem::path& sourcePath) {
     Section section = Section::Header;
     std::string id;
     bool sawVersion = false;
+    bool sawDelay = false;
+    double delaySeconds = 0.0;
     std::vector<TempoSegment> tempoSegments;
     std::vector<NoteEvent> notes;
     std::string line;
@@ -171,6 +173,16 @@ Chart NativeChartLoader::Load(const std::filesystem::path& sourcePath) {
                     throw std::runtime_error(Context(lineNumber, "chart id cannot be declared twice."));
                 }
                 id = value;
+            } else if (key == "delayMilliseconds") {
+                if (sawDelay) {
+                    throw std::runtime_error(Context(lineNumber, "chart delay cannot be declared twice."));
+                }
+                const auto delayMilliseconds = ParseInteger<std::int64_t>(value, lineNumber);
+                if (delayMilliseconds < 0) {
+                    throw std::runtime_error(Context(lineNumber, "chart delay cannot be negative."));
+                }
+                sawDelay = true;
+                delaySeconds = static_cast<double>(delayMilliseconds) / 1000.0;
             } else {
                 throw std::runtime_error(Context(lineNumber, "unknown header key."));
             }
@@ -200,7 +212,7 @@ Chart NativeChartLoader::Load(const std::filesystem::path& sourcePath) {
     if (!sawVersion || id.empty() || tempoSegments.empty() || notes.empty()) {
         throw std::runtime_error(".pdxchart requires schemaVersion, id, one tempo, and one note.");
     }
-    return Chart(std::move(id), TimingMap(std::move(tempoSegments)), std::move(notes));
+    return Chart(std::move(id), TimingMap(std::move(tempoSegments)), std::move(notes), delaySeconds);
 }
 
 } // namespace pumpdx::chart

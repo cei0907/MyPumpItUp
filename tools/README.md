@@ -18,11 +18,12 @@ Open the local address shown by the command. In State 21 it can:
 - add, select, remove, undo, and redo integer-beat tap notes;
 - create long notes by dragging downward in a single lane, resize a selected long-note tail, and edit its tick count;
 - use DAW-style **Select**, **Input**, and **Delete** modes; secondary-click and the Delete key also remove a note quickly;
-- choose fixed values such as note type, panel lane, and grid snap from lists; type only chart ids, beats, BPM, and tick counts;
+- choose fixed values such as note type, panel lane, and grid snap from lists; type only chart ids, beats, BPM, delay, and tick counts;
 - snap new notes to integer, half, triplet, sixteenth, and finer exact fractional beat grids;
-- extend the vertical timeline in advance, or let later notes extend it automatically; lane arrows use red upper, blue lower, and yellow centre identities.
-- use the 50–400% vertical zoom control to spread dense 1/16 or tuplet grids apart without changing their saved beat values.
-- edit chart id and initial BPM;
+- extend the vertical timeline in advance, or let later notes extend it automatically; edit four measures at a time with square cells that reveal five-panel patterns; lane arrows use red upper, blue lower, and yellow centre identities.
+- use the 25–200% vertical zoom control without changing saved beat values.
+- Input mode highlights the exact empty snapped cell beneath the pointer before it creates a note.
+- edit chart id, initial BPM, and delay; delay waits after the audio starts while M1 stays at Beat 0.
 - write the same `.pdxchart` format accepted by `NativeChartLoader`.
 
 After State 23, open the full converted local charts from `assets/local/charts/converted/`. They contain every legacy tap and no added long notes. The tracked `assets/charts/new-song-to-god-hold-playtest.pdxchart` remains a separate, optional long-note authoring sample.

@@ -112,7 +112,8 @@ SongDefinition SongCatalog::LoadDefinition(const std::filesystem::path& manifest
             return std::make_shared<const chart::Chart>(
                 baseChart->Id() + "-hold-overlay",
                 baseChart->Timing(),
-                std::move(mergedNotes));
+                std::move(mergedNotes),
+                baseChart->DelaySeconds());
         }(),
         .audioFilePath = manifest.audioFilePath,
         .staticBgaFilePath = manifest.staticBgaFilePath,

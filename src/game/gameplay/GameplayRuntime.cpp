@@ -225,7 +225,7 @@ std::vector<GameplayRuntime::TimelineNote> GameplayRuntime::CompileTimeline(cons
         std::visit([&timeline, &chart](const auto& note) {
             using Note = std::decay_t<decltype(note)>;
             if constexpr (std::is_same_v<Note, chart::TapNote>) {
-                const auto seconds = chart.Timing().SecondsAt(note.beat);
+                const auto seconds = chart.DelaySeconds() + chart.Timing().SecondsAt(note.beat);
                 timeline.push_back({
                     .lane = note.lane,
                     .startSeconds = seconds,
@@ -236,8 +236,8 @@ std::vector<GameplayRuntime::TimelineNote> GameplayRuntime::CompileTimeline(cons
             } else {
                 std::vector<double> holdTickSeconds;
                 holdTickSeconds.reserve(note.tickPolicy.tickCount);
-                const auto startSeconds = chart.Timing().SecondsAt(note.startBeat);
-                const auto endSeconds = chart.Timing().SecondsAt(note.endBeat);
+                const auto startSeconds = chart.DelaySeconds() + chart.Timing().SecondsAt(note.startBeat);
+                const auto endSeconds = chart.DelaySeconds() + chart.Timing().SecondsAt(note.endBeat);
                 const auto durationSeconds = endSeconds - startSeconds;
                 for (std::uint32_t tickIndex = 1; tickIndex <= note.tickPolicy.tickCount; ++tickIndex) {
                     holdTickSeconds.push_back(startSeconds + durationSeconds

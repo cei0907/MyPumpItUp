@@ -20,12 +20,14 @@ export type ChartNote = TapNote | HoldNote;
 
 export type ChartDocument = {
   id: string;
+  delayMilliseconds: number;
   tempo: Array<{ beat: string; bpm: number }>;
   notes: ChartNote[];
 };
 
 const defaultChart: ChartDocument = {
   id: 'untitled-chart',
+  delayMilliseconds: 0,
   tempo: [{ beat: '0', bpm: 120 }],
   notes: [],
 };
@@ -37,6 +39,7 @@ const trim = (value: string) => value.trim();
 export function cloneChart(chart: ChartDocument): ChartDocument {
   return {
     id: chart.id,
+    delayMilliseconds: chart.delayMilliseconds,
     tempo: chart.tempo.map((segment) => ({ ...segment })),
     notes: chart.notes.map((note) => ({ ...note })),
   };
@@ -74,6 +77,7 @@ function requireBeat(value: string, line: number): string {
 export function parsePdxChart(source: string): ChartDocument {
   let section: 'header' | 'tempo' | 'notes' = 'header';
   let sawVersion = false;
+  let sawDelay = false;
   const chart = emptyChart();
   chart.tempo = [];
 
@@ -109,6 +113,15 @@ export function parsePdxChart(source: string): ChartDocument {
       }
       if (key === 'id' && chart.id === 'untitled-chart') {
         chart.id = value;
+        return;
+      }
+      if (key === 'delayMilliseconds' && !sawDelay) {
+        const delayMilliseconds = Number(value);
+        if (!Number.isInteger(delayMilliseconds) || delayMilliseconds < 0) {
+          throw new Error(`Line ${lineNumber}: delayMilliseconds must be a non-negative integer.`);
+        }
+        chart.delayMilliseconds = delayMilliseconds;
+        sawDelay = true;
         return;
       }
       throw new Error(`Line ${lineNumber}: unknown or duplicate header value.`);
@@ -168,7 +181,7 @@ export function serializePdxChart(chart: ChartDocument): string {
     const rightBeat = right.type === 'tap' ? right.beat : right.startBeat;
     return beatToNumber(leftBeat) - beatToNumber(rightBeat);
   });
-  const lines = ['schemaVersion=1', `id=${id}`, '', '[tempo]'];
+  const lines = ['schemaVersion=1', `id=${id}`, `delayMilliseconds=${chart.delayMilliseconds}`, '', '[tempo]'];
   tempo.forEach((segment) => lines.push(`${segment.beat}=${segment.bpm}`));
   lines.push('', '[notes]');
   notes.forEach((note) => {

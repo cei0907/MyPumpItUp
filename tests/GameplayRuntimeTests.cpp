@@ -93,12 +93,31 @@ void TestInputEdgeUsesSongTimeForJudgement() {
     Expect(runtime.Score().Score() == 1000, "Repeated key-down while held must not judge twice.");
 }
 
+void TestChartDelayKeepsFirstMeasureAtBeatZero() {
+    using namespace pumpdx::chart;
+    const Chart delayedChart(
+        "delayed-runtime-test",
+        TimingMap({{{0}, 120.0}}),
+        {TapNote{.beat = {0}, .lane = PanelLane::Center}},
+        1.25);
+    const pumpdx::gameplay::GameplayRuntime runtime(delayedChart);
+
+    const auto beforeMeasure = runtime.BuildRenderItems(0.0);
+    Expect(beforeMeasure.size() == 1 && beforeMeasure.front().headY > pumpdx::render::layout::kReceptorY,
+        "Delay should keep the first-measure note ahead of the receptor at audio start.");
+
+    const auto firstMeasure = runtime.BuildRenderItems(1.25);
+    Expect(firstMeasure.size() == 1 && std::abs(firstMeasure.front().headY - pumpdx::render::layout::kReceptorY) < kTolerance,
+        "Beat zero must reach the receptor exactly after the chart delay.");
+}
+
 } // namespace
 
 int main() {
     TestChartTimeProjectsToLogicalField();
     TestPanelStateIsIndependentOfRenderingTime();
     TestInputEdgeUsesSongTimeForJudgement();
+    TestChartDelayKeepsFirstMeasureAtBeatZero();
 
     std::cout << "Gameplay runtime tests passed.\n";
     return EXIT_SUCCESS;

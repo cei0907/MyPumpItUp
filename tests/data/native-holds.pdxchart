@@ -1,6 +1,7 @@
 # Readable native chart source. Fractions allow triplets and arbitrary tuplets.
 schemaVersion=1
 id=native-hold-test
+delayMilliseconds=750
 
 [tempo]
 0=120
