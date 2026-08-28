@@ -44,6 +44,7 @@ const gridOptions = [
   { label: '1/12 beat', step: 1 / 12, denominator: 12 },
   { label: '1/16 beat', step: 1 / 16, denominator: 16 },
 ];
+const zoomOptions = [0.5, 0.75, 1, 1.5, 2, 3, 4];
 const greatestCommonDivisor = (left: number, right: number): number => right === 0 ? left : greatestCommonDivisor(right, left % right);
 const formatSnappedBeat = (beat: number, denominator: number) => {
   const numerator = Math.round(beat * denominator);
@@ -59,6 +60,7 @@ export default function Home() {
   const [editorMode, setEditorMode] = useState<EditorMode>('select');
   const [inputNoteType, setInputNoteType] = useState<InputNoteType>('tap');
   const [gridOptionIndex, setGridOptionIndex] = useState(3);
+  const [zoomIndex, setZoomIndex] = useState(2);
   const [requestedTimelineEndBeat, setRequestedTimelineEndBeat] = useState(64);
   const [drag, setDrag] = useState<DragState | null>(null);
   const [notice, setNotice] = useState('Select mode is active. Click a note to inspect or edit it; empty cells do not create notes.');
@@ -68,7 +70,7 @@ export default function Home() {
   const inputRef = useRef<HTMLInputElement>(null);
   const chartRequiredEndBeat = useMemo(() => Math.ceil(chartEndBeat(chart) / 4) * 4 + 4, [chart]);
   const endBeat = Math.max(chartRequiredEndBeat, requestedTimelineEndBeat);
-  const pixelsPerBeat = 54;
+  const pixelsPerBeat = 54 * zoomOptions[zoomIndex];
   const laneWidth = 112;
   const canvasWidth = lanes.length * laneWidth;
   const canvasHeight = Math.max(720, endBeat * pixelsPerBeat + 44);
@@ -93,6 +95,11 @@ export default function Home() {
   const setActiveInputNoteType = (nextType: InputNoteType) => {
     setInputNoteType(nextType); setEditorMode('input'); setDrag(null);
     setNotice(nextType === 'tap' ? 'Tap input is active. Click an empty grid cell to add a tap.' : 'Hold input is active. Drag downward across one empty lane span.');
+  };
+  const changeZoom = (nextIndex: number) => {
+    const boundedIndex = Math.max(0, Math.min(zoomOptions.length - 1, nextIndex));
+    setZoomIndex(boundedIndex);
+    setNotice(`Timeline zoom set to ${Math.round(zoomOptions[boundedIndex] * 100)}%.`);
   };
 
   const noteBounds = (note: ChartNote) => {
@@ -279,6 +286,6 @@ export default function Home() {
       {selected && <section className="panel"><p className="panel-kicker">Selected {selected.type} note</p><label>Panel<select value={selected.lane} onChange={(event) => updateSelectedNote('lane', event.target.value)}>{lanes.map((lane) => <option key={lane} value={lane}>{lane}</option>)}</select></label>{selected.type === 'tap' ? <label>Beat<input value={selected.beat} onChange={(event) => updateSelectedNote('beat', event.target.value)} /></label> : <><label>Start beat<input value={selected.startBeat} onChange={(event) => updateSelectedNote('startBeat', event.target.value)} /></label><label>End beat<input value={selected.endBeat} onChange={(event) => updateSelectedNote('endBeat', event.target.value)} /></label><label>Tick count<input type="number" min="1" value={selected.tickCount} onChange={(event) => updateSelectedNote('tickCount', event.target.value)} /></label></>}<p className="hint">Panel is a fixed choice; beats accept integers, fractions, and mixed fractions.</p></section>}
       <section className="panel"><p className="panel-kicker">Edit history</p><div className="button-row"><button className="quiet-button" onClick={undo} disabled={past.length === 0}>Undo</button><button className="quiet-button" onClick={redo} disabled={future.length === 0}>Redo</button></div><button className="danger-button" onClick={removeSelected}>Remove selected note</button></section>
       <section className="panel status-panel" aria-live="polite"><p className="panel-kicker">Editor status</p><p>{notice}</p></section>
-    </aside><section className="workspace"><div className="workspace-heading"><div><p className="panel-kicker">5-panel vertical timeline · {grid.label} snap</p><h2>{fileName}</h2></div><span>{chart.notes.length} events · ends at beat {endBeat}</span></div><div className="timeline-frame"><canvas className={editorMode === 'select' ? 'select-cursor' : editorMode === 'erase' ? 'erase-cursor' : 'input-cursor'} ref={canvasRef} width={canvasWidth} height={canvasHeight} aria-label="Five lane vertical chart timeline. Select mode inspects notes, Input mode creates notes, and Delete mode removes notes." onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onContextMenu={onContextMenu} /></div><div className="timeline-footer"><span>{editorMode === 'select' ? 'Select: click a note to inspect it. Empty cells are safe.' : editorMode === 'erase' ? 'Delete: click a note to remove it. Empty cells are safe.' : inputNoteType === 'tap' ? 'Input: click an empty lane cell to add a tap note.' : 'Input: drag downward in an empty lane span to add a long note.'}</span><span>Shortcuts: V Select · I Input · X Delete · 1 Tap · 2 Hold · Del Remove · Ctrl+Z/Y Undo/Redo</span></div></section></section>
+    </aside><section className="workspace"><div className="workspace-heading"><div><p className="panel-kicker">5-panel vertical timeline · {grid.label} snap</p><h2>{fileName}</h2></div><div className="workspace-actions"><div className="zoom-control" aria-label="Timeline zoom"><span>Zoom</span><button className="quiet-button compact-button" onClick={() => changeZoom(zoomIndex - 1)} disabled={zoomIndex === 0} aria-label="Zoom out">−</button><select value={zoomIndex} onChange={(event) => changeZoom(Number(event.target.value))} aria-label="Timeline zoom percentage">{zoomOptions.map((zoom, index) => <option key={zoom} value={index}>{Math.round(zoom * 100)}%</option>)}</select><button className="quiet-button compact-button" onClick={() => changeZoom(zoomIndex + 1)} disabled={zoomIndex === zoomOptions.length - 1} aria-label="Zoom in">+</button></div><span>{chart.notes.length} events · ends at beat {endBeat}</span></div></div><div className="timeline-frame"><canvas className={editorMode === 'select' ? 'select-cursor' : editorMode === 'erase' ? 'erase-cursor' : 'input-cursor'} ref={canvasRef} width={canvasWidth} height={canvasHeight} aria-label="Five lane vertical chart timeline. Select mode inspects notes, Input mode creates notes, and Delete mode removes notes." onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onContextMenu={onContextMenu} /></div><div className="timeline-footer"><span>{editorMode === 'select' ? 'Select: click a note to inspect it. Empty cells are safe.' : editorMode === 'erase' ? 'Delete: click a note to remove it. Empty cells are safe.' : inputNoteType === 'tap' ? 'Input: click an empty lane cell to add a tap note.' : 'Input: drag downward in an empty lane span to add a long note.'}</span><span>Zoom: use − / + or the percent list · Shortcuts: V Select · I Input · X Delete · 1 Tap · 2 Hold · Del Remove · Ctrl+Z/Y Undo/Redo</span></div></section></section>
   </main>;
 }

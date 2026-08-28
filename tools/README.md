@@ -21,6 +21,7 @@ Open the local address shown by the command. In State 21 it can:
 - choose fixed values such as note type, panel lane, and grid snap from lists; type only chart ids, beats, BPM, and tick counts;
 - snap new notes to integer, half, triplet, sixteenth, and finer exact fractional beat grids;
 - extend the vertical timeline in advance, or let later notes extend it automatically; lane arrows use red upper, blue lower, and yellow centre identities.
+- use the 50–400% vertical zoom control to spread dense 1/16 or tuplet grids apart without changing their saved beat values.
 - edit chart id and initial BPM;
 - write the same `.pdxchart` format accepted by `NativeChartLoader`.
 

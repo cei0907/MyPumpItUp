@@ -44,7 +44,7 @@ The `State NN` prefix is a small, reviewable Git work unit inside the numbered i
 - [x] Stage 04 / State 21 — Local browser Chart Editor foundation: `.pdxchart` open/save, Canvas five-lane timeline, tap edits, and undo/redo
 - [x] Stage 04 / State 22 — Vertical five-lane timeline with drag-created/resized holds and per-hold tick editing
 - [x] Stage 04 / State 23 — Verified `.stp` to complete tap-only `.pdxchart` conversion; hold playtests remain separate native charts
-- [x] Stage 04 / State 24 — DAW-style Select/Input/Delete pointers, extendable timeline, directional panel glyphs, and exact tuplet grid snapping
+- [x] Stage 04 / State 24 — DAW-style Select/Input/Delete pointers, extendable and vertically zoomable timeline, directional panel glyphs, and exact tuplet grid snapping
 
 ## Phase 0 — Technology and development foundation
 

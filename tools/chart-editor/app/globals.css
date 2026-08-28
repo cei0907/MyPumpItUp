@@ -30,7 +30,11 @@ h1, h2 { margin: 0; letter-spacing: -.02em; } h1 { font-size: 25px; } h2 { font-
 .panel select { cursor: pointer; }
 .hint, .status-panel p:last-child { margin: 12px 0 0; color: #9ca8c9; font-size: 12px; line-height: 1.55; }
 .workspace { min-width: 0; border: 1px solid #303956; border-radius: 14px; overflow: hidden; background: #111528; }
-.workspace-heading { display: flex; align-items: center; justify-content: space-between; padding: 17px 20px; border-bottom: 1px solid #303956; background: #171c32; }
+.workspace-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 17px 20px; border-bottom: 1px solid #303956; background: #171c32; }
+.workspace-actions, .zoom-control { display: flex; align-items: center; gap: 8px; }
+.zoom-control { padding: 4px; border: 1px solid #3e486b; border-radius: 9px; background: #11162a; color: #aebbe0; font-size: 12px; font-weight: 700; }
+.zoom-control select { min-width: 70px; border: 0; border-radius: 5px; padding: 6px; background: #222b49; color: #edf2ff; font: inherit; font-weight: 700; cursor: pointer; }
+.compact-button { min-width: 30px; padding: 6px 9px; }
 .workspace-heading span { border: 1px solid #4f5e8d; border-radius: 99px; padding: 5px 9px; color: #b8c7ff; font-size: 12px; font-weight: 700; }
 .timeline-frame { overflow: auto; max-height: calc(100vh - 216px); padding: 18px; background: #0c0f1d; }
 canvas { display: block; margin: 0 auto; border: 1px solid #3a4467; }
@@ -38,4 +42,4 @@ canvas.select-cursor { cursor: default; }
 canvas.input-cursor { cursor: crosshair; }
 canvas.erase-cursor { cursor: not-allowed; }
 .timeline-footer { display: flex; justify-content: space-between; gap: 24px; padding: 13px 20px; color: #9ca8c9; font-size: 12px; }
-@media (max-width: 1050px) { .editor-grid { grid-template-columns: 240px minmax(0, 1fr); padding: 16px; } .topbar { padding: 16px; } }
+@media (max-width: 1050px) { .editor-grid { grid-template-columns: 240px minmax(0, 1fr); padding: 16px; } .topbar { padding: 16px; } .workspace-heading { align-items: flex-start; flex-direction: column; } .workspace-actions { width: 100%; justify-content: space-between; } }
