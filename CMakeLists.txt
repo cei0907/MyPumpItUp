@@ -17,6 +17,7 @@ if(MSVC)
 endif()
 
 add_library(pumpdx_core
+    src/framework/animation/SceneTimeline.cpp
     src/framework/assets/ResourceCache.cpp
     src/framework/assets/ThemeManifest.cpp
     src/framework/render/LogicalViewport.cpp
@@ -215,6 +216,21 @@ if(BUILD_TESTING)
     endif()
 
     add_test(NAME PumpDXCoreTests COMMAND PumpDXCoreTests)
+
+    add_executable(PumpDXSceneTimelineTests
+        tests/SceneTimelineTests.cpp
+    )
+
+    target_link_libraries(PumpDXSceneTimelineTests PRIVATE pumpdx_core)
+    target_compile_features(PumpDXSceneTimelineTests PRIVATE cxx_std_20)
+
+    if(MSVC)
+        target_compile_options(PumpDXSceneTimelineTests PRIVATE /W4 /permissive- /Zc:__cplusplus /utf-8)
+    else()
+        target_compile_options(PumpDXSceneTimelineTests PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME PumpDXSceneTimelineTests COMMAND PumpDXSceneTimelineTests)
 
     add_executable(PumpDXBgaVideoTests
         tests/BgaVideoPlayerTests.cpp

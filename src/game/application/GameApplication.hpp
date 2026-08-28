@@ -1,6 +1,7 @@
 #pragma once
 
 #include "framework/assets/ResourceCache.hpp"
+#include "framework/animation/SceneTimeline.hpp"
 #include "framework/render/LogicalViewport.hpp"
 #include "framework/render/SceneOverlayRenderer.hpp"
 #include "framework/video/MediaFoundationBgaPlayer.hpp"
@@ -9,6 +10,7 @@
 #include <Windows.h>
 #include <d3d11.h>
 
+#include <chrono>
 #include <cstdint>
 
 namespace pumpdx::game {
@@ -53,6 +55,10 @@ private:
     render::SceneOverlayRenderer sceneOverlayRenderer_{};
     video::MediaFoundationBgaPlayer bgaVideoPlayer_{};
     GameFlow gameFlow_{};
+    animation::SceneTimeline sceneTimeline_{};
+    scenes::SceneId timelineScene_ = scenes::SceneId::MainMenu;
+    std::chrono::steady_clock::time_point uiClockStartedAt_ = std::chrono::steady_clock::now();
+    bool timelineSceneBound_ = false;
 };
 
 } // namespace pumpdx::game

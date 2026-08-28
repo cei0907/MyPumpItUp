@@ -326,7 +326,8 @@ void SceneOverlayRenderer::Shutdown() {
 void SceneOverlayRenderer::Draw(
     const core::ViewportRect& viewport,
     const SceneOverlayText& text,
-    const assets::ThemePalette& palette) {
+    const assets::ThemePalette& palette,
+    const SceneOverlayMotion& motion) {
     if (target_ == nullptr || brush_ == nullptr || viewport.scale <= 0.0F) {
         return;
     }
@@ -336,27 +337,45 @@ void SceneOverlayRenderer::Draw(
         D2D1::Matrix3x2F::Scale(viewport.scale, viewport.scale)
         * D2D1::Matrix3x2F::Translation(viewport.x, viewport.y));
 
-    brush_->SetColor(ToD2DColor(palette.panel));
+    const auto entrance = (std::clamp)(motion.entrance, 0.0F, 1.0F);
+    const auto cardTop = 112.0F + (1.0F - entrance) * 72.0F;
+    const auto cardBottom = 608.0F + (1.0F - entrance) * 72.0F;
+    const auto pulse = (std::clamp)(motion.loopPulse, 0.0F, 1.0F);
+
+    brush_->SetColor(WithOpacity(ToD2DColor(palette.panel), 0.55F + entrance * 0.45F));
     target_->FillRoundedRectangle(
-        D2D1::RoundedRect(D2D1::RectF(106.0F, 112.0F, 1174.0F, 608.0F), 28.0F, 28.0F), brush_);
+        D2D1::RoundedRect(D2D1::RectF(106.0F, cardTop, 1174.0F, cardBottom), 28.0F, 28.0F), brush_);
 
-    brush_->SetColor(ToD2DColor(palette.accent));
-    target_->FillRectangle(D2D1::RectF(156.0F, 197.0F, 166.0F, 438.0F), brush_);
+    brush_->SetColor(WithOpacity(ToD2DColor(palette.accent), entrance));
+    target_->FillRectangle(D2D1::RectF(156.0F, cardTop + 85.0F, 166.0F, cardTop + 326.0F), brush_);
 
-    brush_->SetColor(ToD2DColor(palette.heading));
+    if (motion.style == SceneOverlayStyle::MainMenu) {
+        brush_->SetColor(WithOpacity(ToD2DColor(palette.accent), 0.08F + pulse * 0.10F));
+        target_->FillEllipse(D2D1::Ellipse(D2D1::Point2F(1055.0F, cardTop + 74.0F), 126.0F + pulse * 36.0F, 126.0F + pulse * 36.0F), brush_);
+    } else if (motion.style == SceneOverlayStyle::SongSelect) {
+        brush_->SetColor(WithOpacity(ToD2DColor(palette.accent), 0.18F + pulse * 0.22F));
+        target_->FillRoundedRectangle(
+            D2D1::RoundedRect(D2D1::RectF(184.0F, cardTop + 274.0F, 1098.0F, cardTop + 334.0F), 14.0F, 14.0F), brush_);
+    } else if (motion.style == SceneOverlayStyle::Result) {
+        brush_->SetColor(WithOpacity(ToD2DColor(palette.accent), 0.12F + pulse * 0.14F));
+        target_->FillRoundedRectangle(
+            D2D1::RoundedRect(D2D1::RectF(202.0F, cardTop + 294.0F, 1078.0F, cardTop + 304.0F), 5.0F, 5.0F), brush_);
+    }
+
+    brush_->SetColor(WithOpacity(ToD2DColor(palette.heading), entrance));
     target_->DrawText(
         text.headline.data(), static_cast<UINT32>(text.headline.size()), headlineFormat_,
-        D2D1::RectF(204.0F, 170.0F, 1100.0F, 260.0F), brush_);
+        D2D1::RectF(204.0F, cardTop + 58.0F, 1100.0F, cardTop + 148.0F), brush_);
 
-    brush_->SetColor(ToD2DColor(palette.detail));
+    brush_->SetColor(WithOpacity(ToD2DColor(palette.detail), motion.detailReveal));
     target_->DrawText(
         text.detail.data(), static_cast<UINT32>(text.detail.size()), detailFormat_,
-        D2D1::RectF(204.0F, 294.0F, 1080.0F, 360.0F), brush_);
+        D2D1::RectF(204.0F, cardTop + 182.0F, 1080.0F, cardTop + 248.0F), brush_);
 
-    brush_->SetColor(ToD2DColor(palette.instruction));
+    brush_->SetColor(WithOpacity(ToD2DColor(palette.instruction), motion.instructionReveal));
     target_->DrawText(
         text.instruction.data(), static_cast<UINT32>(text.instruction.size()), instructionFormat_,
-        D2D1::RectF(204.0F, 468.0F, 1080.0F, 526.0F), brush_);
+        D2D1::RectF(204.0F, cardTop + 356.0F, 1080.0F, cardTop + 414.0F), brush_);
 
     target_->SetTransform(D2D1::Matrix3x2F::Identity());
     target_->EndDraw();

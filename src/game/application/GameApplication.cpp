@@ -1,11 +1,27 @@
 #include "game/application/GameApplication.hpp"
 
 #include <array>
+#include <chrono>
 #include <cstdint>
 #include <filesystem>
 #include <stdexcept>
 
 namespace pumpdx::game {
+
+namespace {
+
+[[nodiscard]] render::SceneOverlayStyle ToOverlayStyle(const scenes::SceneId sceneId) noexcept {
+    switch (sceneId) {
+    case scenes::SceneId::MainMenu: return render::SceneOverlayStyle::MainMenu;
+    case scenes::SceneId::SongSelect: return render::SceneOverlayStyle::SongSelect;
+    case scenes::SceneId::Result: return render::SceneOverlayStyle::Result;
+    case scenes::SceneId::Gameplay: return render::SceneOverlayStyle::Generic;
+    }
+
+    return render::SceneOverlayStyle::Generic;
+}
+
+} // namespace
 
 GameApplication::GameApplication(const HINSTANCE instanceHandle)
     : instanceHandle_(instanceHandle) {
@@ -246,6 +262,21 @@ void GameApplication::RenderFrame() {
     context_->Flush();
 
     const auto visual = gameFlow_.CurrentSceneVisual();
+    const auto currentSceneId = gameFlow_.CurrentSceneId();
+    const auto uiTimeSeconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - uiClockStartedAt_).count();
+    if (!timelineSceneBound_ || currentSceneId != timelineScene_) {
+        sceneTimeline_.Restart(uiTimeSeconds);
+        timelineScene_ = currentSceneId;
+        timelineSceneBound_ = true;
+    }
+    const auto timeline = sceneTimeline_.Sample(uiTimeSeconds);
+    const auto sceneMotion = render::SceneOverlayMotion{
+        .style = ToOverlayStyle(currentSceneId),
+        .entrance = timeline.entrance,
+        .loopPulse = timeline.loopPulse,
+        .detailReveal = timeline.detailReveal,
+        .instructionReveal = timeline.instructionReveal,
+    };
     const auto overlayText = render::SceneOverlayText{
         .headline = visual.headline,
         .detail = visual.detail,
@@ -280,7 +311,7 @@ void GameApplication::RenderFrame() {
     } else {
         bgaVideoPlayer_.Close();
         sceneOverlayRenderer_.ClearGameplayVideoFrame();
-        sceneOverlayRenderer_.Draw(logicalViewport_, overlayText, palette);
+        sceneOverlayRenderer_.Draw(logicalViewport_, overlayText, palette, sceneMotion);
     }
 
     swapChain_->Present(1, 0);

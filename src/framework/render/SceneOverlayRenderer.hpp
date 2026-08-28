@@ -24,6 +24,21 @@ struct SceneOverlayText final {
     std::wstring_view instruction;
 };
 
+enum class SceneOverlayStyle : std::uint8_t {
+    MainMenu,
+    SongSelect,
+    Result,
+    Generic,
+};
+
+struct SceneOverlayMotion final {
+    SceneOverlayStyle style = SceneOverlayStyle::Generic;
+    float entrance = 1.0F;
+    float loopPulse = 0.0F;
+    float detailReveal = 1.0F;
+    float instructionReveal = 1.0F;
+};
+
 struct GameplayRenderItem final {
     std::uint8_t lane = 0;
     float headY = 0.0F;
@@ -59,7 +74,11 @@ public:
     void ClearGameplayVideoFrame();
     void ReleaseTarget();
     void Shutdown();
-    void Draw(const core::ViewportRect& viewport, const SceneOverlayText& text, const assets::ThemePalette& palette);
+    void Draw(
+        const core::ViewportRect& viewport,
+        const SceneOverlayText& text,
+        const assets::ThemePalette& palette,
+        const SceneOverlayMotion& motion);
     void DrawGameplay(
         const core::ViewportRect& viewport,
         const SceneOverlayText& text,
