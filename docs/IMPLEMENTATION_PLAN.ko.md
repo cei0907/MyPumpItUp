@@ -41,6 +41,7 @@
 - [x] Stage 03 / State 19 — 순차 씬 진입과 모션 임시 표현을 위한 UI 전용 SceneTimeline
 - [x] Stage 03 / State 20 — 레거시형 선곡 캐러셀, 곡별 난이도 선택, 기존 메뉴 4곡의 로컬 전용 복원
 - [x] Stage 03 / State 20-1 — 노트 표시 속도에만 전달하는 임시 레거시 배속 증가 커맨드
+- [x] Stage 04 / State 21 — 로컬 브라우저 Chart Editor 기반: `.pdxchart` 열기/저장, Canvas 5레인 타임라인, 탭 편집, Undo/Redo
 
 ## 단계 0 — 기술 스택과 개발 기반
 

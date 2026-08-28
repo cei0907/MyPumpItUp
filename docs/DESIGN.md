@@ -271,6 +271,8 @@ The editor is a separate browser application, not a runtime scene.  Its timeline
 
 The 2023 `stepCreator2.html` is retained as a useful prototype reference only.  It has a fixed 58-bar, 16-row-per-bar table and exports five strings of `0`/`1`; it cannot express the new timing or hold model.
 
+State 21 establishes the local implementation in `tools/chart-editor/`. It keeps chart parsing and serialization separate from the React/Canvas interface, opens and saves the runtime-compatible `.pdxchart` text format, displays only one canvas timeline rather than one DOM node per note, and records basic tap edits as undoable document snapshots. Direct in-place saving uses the browser File System Access API when available; the download fallback preserves the same source format. Hold authoring, arbitrary grids, tuplets, and waveform work remain later states.
+
 ## 11. First playable vertical slice
 
 The first implementation milestone is complete only when all of the following work in one test song:
