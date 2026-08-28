@@ -40,6 +40,7 @@ The `State NN` prefix is a small, reviewable Git work unit inside the numbered i
 - [x] Stage 03 / State 18 — Audio-synchronised song BGA video with dropped-frame handling and static fallback
 - [x] Stage 03 / State 19 — UI-only SceneTimeline with staged scene entrances and motion placeholders
 - [x] Stage 03 / State 20 — Legacy-style song carousel, grouped difficulty selection, and local-only restoration of the four original menu songs
+- [x] Stage 03 / State 20-1 — Temporary legacy speed-up command, passed only to note rendering
 
 ## Phase 0 — Technology and development foundation
 

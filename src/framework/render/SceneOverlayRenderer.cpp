@@ -442,7 +442,9 @@ void SceneOverlayRenderer::DrawSongSelect(
     drawText(L"PLAYER 1", detailFormat_, D2D1::RectF(82.0F, 160.0F, 244.0F, 202.0F), WithOpacity(heading, entrance));
     drawText(L"SINGLE", instructionFormat_, D2D1::RectF(82.0F, 224.0F, 244.0F, 254.0F), WithOpacity(detail, entrance));
     drawText(L"SPEED", instructionFormat_, D2D1::RectF(82.0F, 302.0F, 244.0F, 332.0F), WithOpacity(detail, entrance));
-    drawText(L"x 1.0", detailFormat_, D2D1::RectF(82.0F, 334.0F, 244.0F, 372.0F), WithOpacity(heading, entrance));
+    const auto speedTenths = static_cast<int>(std::lround(song.scrollSpeed * 10.0F));
+    const auto speedLabel = L"x " + std::to_wstring(speedTenths / 10) + L"." + std::to_wstring(speedTenths % 10);
+    drawText(speedLabel, detailFormat_, D2D1::RectF(82.0F, 334.0F, 244.0F, 372.0F), WithOpacity(heading, entrance));
     drawText(L"ENTER  PLAY", instructionFormat_, D2D1::RectF(82.0F, 454.0F, 244.0F, 484.0F), WithOpacity(detail, motion.instructionReveal));
     drawText(L"ESC  BACK", instructionFormat_, D2D1::RectF(82.0F, 496.0F, 244.0F, 526.0F), WithOpacity(detail, motion.instructionReveal));
 

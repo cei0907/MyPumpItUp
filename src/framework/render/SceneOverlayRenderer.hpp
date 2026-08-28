@@ -51,6 +51,7 @@ struct SongSelectOverlay final {
     std::uint32_t songCount = 1;
     std::uint32_t selectedDifficultyNumber = 1;
     std::uint32_t difficultyCount = 1;
+    float scrollSpeed = 1.0F;
     bool difficultySelectionActive = false;
 };
 

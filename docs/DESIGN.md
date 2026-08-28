@@ -377,4 +377,6 @@ The Song Select presentation preserves the useful legacy composition on the 1280
 
 Keyboard mapping mirrors the five-panel menu flow for now: `Z`/`C` moves songs while browsing, `S` enters difficulty mode, `Z`/`C` moves difficulties, and `S` starts the selected chart. `Q`/`E` or Escape exits difficulty mode; Enter remains a desktop convenience shortcut to start the current chart. Physical-pad mapping will use the same semantic actions later.
 
+As a temporary legacy compatibility aid, the browse-mode sequence `Q → E → Q → E → S` advances scroll speed by 0.5 from x1.0 through x3.5 and then returns to x1.0. It is consumed before normal Song Select actions, is shown in the left status panel, and is passed to note projection only. The audio clock and judgement windows do not change.
+
 The restored original collection is deliberately local-only: Africa (16), Flying Dock (3/5), New Song To God (10), and You Are Good (14). MP3/STP source files live under ignored `assets/local/`; manifests and documentation are the only catalog files committed publicly. This makes a fresh clone safe while keeping the user’s local development copy immediately playable.

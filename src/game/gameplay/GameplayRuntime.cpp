@@ -14,15 +14,19 @@ constexpr float kScrollPixelsPerSecond = 230.0F;
 constexpr float kVisibleTop = 88.0F;
 constexpr float kVisibleBottom = 685.0F;
 
-[[nodiscard]] float ToScreenY(const double eventSeconds, const double songTimeSeconds) {
-    return render::layout::kReceptorY + static_cast<float>((eventSeconds - songTimeSeconds) * kScrollPixelsPerSecond);
+[[nodiscard]] float ToScreenY(const double eventSeconds, const double songTimeSeconds, const float scrollSpeed) {
+    return render::layout::kReceptorY + static_cast<float>((eventSeconds - songTimeSeconds) * kScrollPixelsPerSecond * scrollSpeed);
 }
 
 } // namespace
 
-GameplayRuntime::GameplayRuntime(const chart::Chart& chart, std::unique_ptr<SongClock> songClock)
+GameplayRuntime::GameplayRuntime(
+    const chart::Chart& chart,
+    std::unique_ptr<SongClock> songClock,
+    const float scrollSpeed)
     : songClock_(songClock ? std::move(songClock) : std::make_unique<DebugSongClock>())
     , timeline_(CompileTimeline(chart))
+    , scrollSpeed_((std::clamp)(scrollSpeed, 1.0F, 3.5F))
     , judgementEngine_([this] {
         std::vector<JudgableNote> notes;
         notes.reserve(timeline_.size());
@@ -61,6 +65,10 @@ double GameplayRuntime::SongTimeSeconds() const noexcept {
     return songClock_->Seconds();
 }
 
+float GameplayRuntime::ScrollSpeed() const noexcept {
+    return scrollSpeed_;
+}
+
 const std::array<bool, 5>& GameplayRuntime::PressedPanels() const noexcept {
     return pressedPanels_;
 }
@@ -91,8 +99,8 @@ std::vector<render::GameplayRenderItem> GameplayRuntime::BuildRenderItems(const 
         if (note.isHold && note.holdFinishedSuccessfully) {
             continue;
         }
-        const auto headY = ToScreenY(note.startSeconds, songTimeSeconds);
-        const auto tailY = note.isHold ? ToScreenY(note.endSeconds, songTimeSeconds) : headY;
+        const auto headY = ToScreenY(note.startSeconds, songTimeSeconds, scrollSpeed_);
+        const auto tailY = note.isHold ? ToScreenY(note.endSeconds, songTimeSeconds, scrollSpeed_) : headY;
         const auto hasConsumedHead = note.isHold
             && note.holdActivated
             && headY < render::layout::kReceptorY;
@@ -107,7 +115,7 @@ std::vector<render::GameplayRenderItem> GameplayRuntime::BuildRenderItems(const 
         const auto holdBodyStartY = hasConsumedHead
             ? (isHoldBeingHeld
                 ? render::layout::kReceptorY
-                : ToScreenY(note.visualBodyStartSeconds, songTimeSeconds))
+                : ToScreenY(note.visualBodyStartSeconds, songTimeSeconds, scrollSpeed_))
             : headY;
         const auto top = std::min(holdBodyStartY, tailY);
         const auto bottom = std::max(holdBodyStartY, tailY);

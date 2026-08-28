@@ -87,12 +87,29 @@ void TestLegacySongSelectNavigationAndDifficultyChoice() {
     Expect(gameFlow.SelectedSong().difficultyLevel == 5, "Gameplay must receive the chosen difficulty.");
 }
 
+void TestTemporaryLegacySpeedCommandChangesOnlyScrollSpeed() {
+    pumpdx::game::GameFlow gameFlow;
+
+    Confirm(gameFlow, SceneId::SongSelect, "Expected song select before speed command test.");
+    for (const auto key : {'Q', 'E', 'Q', 'E', 'S'}) {
+        gameFlow.HandleKeyReleased(key);
+    }
+    Expect(gameFlow.CurrentSongSelectOverlay().scrollSpeed == 1.5F,
+        "The temporary legacy command must advance selection speed by 0.5.");
+
+    Confirm(gameFlow, SceneId::Gameplay, "Enter must start the selected chart after the speed command.");
+    Expect(gameFlow.ActiveGameplay() != nullptr, "Speed command test requires active gameplay.");
+    Expect(gameFlow.ActiveGameplay()->ScrollSpeed() == 1.5F,
+        "The selected scroll speed must be passed into gameplay rendering.");
+}
+
 } // namespace
 
 int main() {
     TestCompletedSessionProducesIndependentResult();
     TestCancelledSessionDoesNotProduceResult();
     TestLegacySongSelectNavigationAndDifficultyChoice();
+    TestTemporaryLegacySpeedCommandChangesOnlyScrollSpeed();
 
     std::cout << "Game flow tests passed.\n";
     return EXIT_SUCCESS;

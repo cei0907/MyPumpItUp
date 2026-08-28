@@ -17,12 +17,16 @@ namespace pumpdx::gameplay {
 
 class GameplayRuntime final {
 public:
-    explicit GameplayRuntime(const chart::Chart& chart, std::unique_ptr<SongClock> songClock = nullptr);
+    explicit GameplayRuntime(
+        const chart::Chart& chart,
+        std::unique_ptr<SongClock> songClock = nullptr,
+        float scrollSpeed = 1.0F);
 
     void SetPanelPressed(chart::PanelLane lane, bool pressed) noexcept;
     void Update();
 
     [[nodiscard]] double SongTimeSeconds() const noexcept;
+    [[nodiscard]] float ScrollSpeed() const noexcept;
     [[nodiscard]] const std::array<bool, 5>& PressedPanels() const noexcept;
     [[nodiscard]] const ScoreState& Score() const noexcept;
     [[nodiscard]] const EnergyGauge& Energy() const noexcept;
@@ -58,6 +62,7 @@ private:
     ScoreState scoreState_;
     EnergyGauge energyGauge_;
     GameplayEffectPool effectPool_;
+    float scrollSpeed_ = 1.0F;
     std::array<bool, 5> pressedPanels_{};
 };
 

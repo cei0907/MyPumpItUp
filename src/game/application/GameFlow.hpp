@@ -9,6 +9,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <array>
 #include <filesystem>
 #include <optional>
 
@@ -40,6 +41,7 @@ private:
     void CancelActiveSession() noexcept;
     void MoveSongSelection(int direction) noexcept;
     void MoveDifficultySelection(int direction) noexcept;
+    [[nodiscard]] bool TryApplySpeedCommand(std::uint32_t virtualKey) noexcept;
 
     content::SongCatalog songCatalog_;
     scenes::SceneManager sceneManager_;
@@ -47,6 +49,9 @@ private:
     bool audioPlaybackStarted_ = false;
     std::size_t selectedSongIndex_ = 0;
     std::size_t selectedDifficultyIndex_ = 0;
+    std::array<std::uint32_t, 5> speedCommandInput_{};
+    std::size_t speedCommandLength_ = 0;
+    float scrollSpeed_ = 1.0F;
     bool difficultySelectionActive_ = false;
     std::optional<session::PlaySession> activeSession_;
     std::optional<gameplay::GameplayRuntime> activeGameplay_;

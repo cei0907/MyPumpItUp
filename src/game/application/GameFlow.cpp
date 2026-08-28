@@ -31,6 +31,9 @@ void GameFlow::HandleKeyReleased(const std::uint32_t virtualKey) {
         }
     }
     if (CurrentSceneId() == scenes::SceneId::SongSelect) {
+        if (!difficultySelectionActive_ && TryApplySpeedCommand(virtualKey)) {
+            return;
+        }
         if (virtualKey == 'Z') {
             difficultySelectionActive_ ? MoveDifficultySelection(-1) : MoveSongSelection(-1);
             return;
@@ -106,6 +109,7 @@ render::SongSelectOverlay GameFlow::CurrentSongSelectOverlay() const {
         .songCount = static_cast<std::uint32_t>(songCount),
         .selectedDifficultyNumber = static_cast<std::uint32_t>(selectedDifficultyIndex_ + 1),
         .difficultyCount = static_cast<std::uint32_t>(songCatalog_.DifficultyCount(selectedSongIndex_)),
+        .scrollSpeed = scrollSpeed_,
         .difficultySelectionActive = difficultySelectionActive_,
     };
 }
@@ -175,9 +179,10 @@ void GameFlow::BeginSelectedSession() {
         audioPlaybackStarted_ = true;
         activeGameplay_.emplace(
             activeSession_->SelectedChart(),
-            std::make_unique<gameplay::FmodSongClock>(audioPlayer_, song.audioOffsetSeconds));
+            std::make_unique<gameplay::FmodSongClock>(audioPlayer_, song.audioOffsetSeconds),
+            scrollSpeed_);
     } else {
-        activeGameplay_.emplace(activeSession_->SelectedChart());
+        activeGameplay_.emplace(activeSession_->SelectedChart(), nullptr, scrollSpeed_);
     }
     latestResult_.reset();
 }
@@ -225,6 +230,31 @@ void GameFlow::MoveDifficultySelection(const int direction) noexcept {
     } else if (direction > 0) {
         selectedDifficultyIndex_ = (selectedDifficultyIndex_ + 1) % count;
     }
+}
+
+bool GameFlow::TryApplySpeedCommand(const std::uint32_t virtualKey) noexcept {
+    constexpr std::array<std::uint32_t, 5> kIncreaseSpeedCommand{'Q', 'E', 'Q', 'E', 'S'};
+    if (virtualKey != 'Q' && virtualKey != 'E' && virtualKey != 'S') {
+        speedCommandLength_ = 0;
+        return false;
+    }
+
+    speedCommandInput_[speedCommandLength_++] = virtualKey;
+    if (speedCommandLength_ < kIncreaseSpeedCommand.size()) {
+        return false;
+    }
+
+    const auto matched = speedCommandInput_ == kIncreaseSpeedCommand;
+    speedCommandLength_ = 0;
+    if (!matched) {
+        return false;
+    }
+
+    scrollSpeed_ += 0.5F;
+    if (scrollSpeed_ > 3.5F) {
+        scrollSpeed_ = 1.0F;
+    }
+    return true;
 }
 
 } // namespace pumpdx::game
